@@ -8,21 +8,19 @@
 # File used to retrieve geometry and a specific value from a vector file
 # when the user select a point identify by lat and long into the map.
 #========================================================================
-import os
+
+from mdlFunctions import _returnDatasetAttributes
+from mdlFunctions import _writeTrace
+from mdlFunctions import queryFeature
+from mdlFunctions import returnVariableFeature
+from mdlFunctions import strGEPSGF4326Proj
+from mdlFunctions import strGEPSGF900913Proj
 import cgi
 import cgitb
-from owslib.wcs import WebCoverageService as w  
-from owslib.wms import WebMapService
-import numpy as np
-import gdal
-import ast
-from gdalconst import *
-from array import *
-import time
-import sys
 import json
-from datetime import date
-from mdlFunctions import strGEPSGF4326Proj,strGEPSGF900913Proj,_returnDatasetAttributes,returnVariableFeature,queryFeature,_writeTrace
+import sys
+
+
 cgitb.enable()
 
 
@@ -30,7 +28,7 @@ print "Content-type: application/json"
 print
 result=''
 
-try:	
+try:
 	# reads input parameters
 	form   = cgi.FieldStorage()
 	# latitude and longitude values
@@ -47,47 +45,47 @@ try:
 		arrayParams["strDate"]= (form.getfirst("strDate"))
 	except:
 		arrayParams["strDate"]=''
-	
+
 	strError=''
-	response={}		
+	response={}
 	if (arrayParams["layerCrop"]==None):
 		response["id"]=''
 		response["geometry"]=''
 		response["label"]=''
 		response["projection"]=''
-	else:		
+	else:
 		# return dataset feature
-		arrayFName=returnVariableFeature(arrayParams["layerCrop"])											
+		arrayFName=returnVariableFeature(arrayParams["layerCrop"])
 		# return dataset attributes
-		arrayVDataset=_returnDatasetAttributes(arrayFName["id"],arrayFName["type"])				
+		arrayVDataset=_returnDatasetAttributes(arrayFName["id"],arrayFName["type"])
 		# return geometry
 		#print arrayFName
 		#print arrayVDataset
 		result=queryFeature(arrayFName,arrayVDataset,arrayParams,'','the_geom','')
-		
-		resultGeom='';		
-		if (result["result"] == 1):			
+
+		resultGeom='';
+		if (result["result"] == 1):
 			resultGeom=result["value"]
-			
+
 			# query vector shapefile and retrieve the value
 			result=queryFeature(arrayFName,arrayVDataset,arrayParams,'',arrayFName["returnid"],'')
 			resultID=''
-			if (result["result"] == 1):			
+			if (result["result"] == 1):
 				resultID=result["value"]
 				# output google projection
 				if (arrayVDataset["serverType"]=="MAPSERVER"):
 					strToProj=strGEPSGF900913Proj;
 				else:
-					strToProj=strGEPSGF4326Proj;			
-				
+					strToProj=strGEPSGF4326Proj;
+
 				response["id"]=resultID
 				response["geometry"]=resultGeom
 				response["label"]=arrayFName["returnlabel"]
-				response["projection"]=strToProj					
-				
+				response["projection"]=strToProj
+
 			else:
-				strError=result["error"]			
-		
+				strError=result["error"]
+
 		else:
 			strError=result["error"]
 	if (strError == ""):
@@ -96,10 +94,10 @@ try:
 	else:
 		response["error"]=strError
 		response["result"]='0'
-	
+
 	print(json.JSONEncoder().encode(response))
 except:
 	_writeTrace(str(sys.exc_info()))
 	strError='There was an error with the request. Pleae, try again.'
 	response={'result': 0, 'error': strError}
-	print(json.JSONEncoder().encode(response))	
+	print(json.JSONEncoder().encode(response))

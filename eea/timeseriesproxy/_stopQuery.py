@@ -13,16 +13,14 @@
 # This script executes the content and delete the file.
 #========================================================================
 
-import os
-import cgi
-import cgitb
+from mdlFunctions import _killPid
+from mdlFunctions import _writeTrace
 import sys
-from mdlFunctions import _deleteFile,_killPid,_writeTrace
+import json
 
 print "Content-Type: text/plain;charset=utf-8"
 print
 
-import json
 # read input parameters
 try:
 	arrayParams = json.load(sys.stdin)
@@ -32,4 +30,4 @@ try:
 	# delete the temporary file
 	#_deleteFile(arrayParams["strFile"])
 except:
-	_writeTrace(str(sys.exc_info()))		
+	_writeTrace(str(sys.exc_info()))
