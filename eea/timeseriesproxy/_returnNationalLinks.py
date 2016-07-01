@@ -1,13 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _returnNationalLinks.py
-#========================================================================
-#========================================================================
-# File used to retrieve all common dates for a list of coverages.
-#========================================================================
 
+"""
+File used to retrieve all common dates for a list of coverages.
+"""
 
 from mdlFunctions import _returnNationalLinks
 from mdlFunctions import logger

@@ -1,17 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _stopQuery.py
-#========================================================================
-#========================================================================
-# File used to stop the execution of a script on server side when the
-# user stop to execute the ajax call.
-# When the system starts to execute a query, It creates a file called
-# with the same name of csv file +'.pid' containing the instruction
-# kill $pid.
-# This script executes the content and delete the file.
-#========================================================================
+
+"""
+File used to stop the execution of a script on server side when the user stop to
+execute the ajax call.  When the system starts to execute a query, It creates a
+file called with the same name of csv file +'.pid' containing the instruction
+kill $pid.  This script executes the content and delete the file.
+"""
 
 from mdlFunctions import _killPid
 from mdlFunctions import logger

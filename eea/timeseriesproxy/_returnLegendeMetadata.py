@@ -1,12 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _returnLegendeMetadata.py
-#========================================================================
-#========================================================================
-# File used to retrieve Legend and Metadata for a specific layer.
-#========================================================================
+
+"""
+File used to retrieve Legend and Metadata for a specific layer.
+"""
 
 
 from mdlFunctions import _returnDatasetAttributes

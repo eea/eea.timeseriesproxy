@@ -1,13 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _returnCSV.py
-#========================================================================
-#========================================================================
-# File used to write and initialize the CSV file used to save the query
-# by point, box or shape result.
-#========================================================================
+"""
+File used to write and initialize the CSV file used to save the query by point,
+box or shape result.
+"""
 
 
 #from mdlFunctions import _writeTrace

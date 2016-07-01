@@ -1,13 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _returnGeometry.py
-#========================================================================
-#========================================================================
-# File used to retrieve geometry and a specific value from a vector file
-# when the user select a point identify by lat and long into the map.
-#========================================================================
+
+"""
+File used to retrieve geometry and a specific value from a vector file
+when the user select a point identify by lat and long into the map.
+"""
 
 #from mdlFunctions import _writeTrace
 #import sys

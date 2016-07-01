@@ -1,14 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-#========================================================================
-#========================================================================
-# File: _returnDatasetFieldID.py
-#========================================================================
-#========================================================================
-# File used to retrieve geometry and a specific value from a vector file
-# when the user select a point identify by lat and long into the map.
-#========================================================================
 
+"""
+File used to retrieve geometry and a specific value from a vector file
+when the user select a point identify by lat and long into the map.
+"""
 
 from mdlFunctions import _returnDatasetIndicatorGroup
 from mdlFunctions import _returnEncodedArrayLayers
@@ -27,6 +23,7 @@ import json
 
 
 def main():
+    response = {}
     # reads input parameters
     form = cgi.FieldStorage()
     # specific dataset name
@@ -87,7 +84,6 @@ if __name__ == "__main__":
 
     print "Content-type: application/json"
     print
-    response = {}
     try:
         main()
     except:
