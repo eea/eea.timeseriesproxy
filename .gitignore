@@ -87,3 +87,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# timeserver package
+eea/timeseriesproxy/www/temp
