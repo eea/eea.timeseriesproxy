@@ -1,0 +1,52 @@
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113006568215_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113006568215_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113013968300_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113013968300_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113043017139_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113043017139_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113112839809_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113112839809_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113121927556_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113121927556_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113133202892_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113133202892_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113142148462_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113142148462_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3567P x 2470L.
+Processing input file /var/www/html/temp/20150430113150693111_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20150430113150693111_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3586P x 881L.
+Processing input file /var/www/html/temp/20151020113727697305_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20151020113727697305_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3586P x 881L.
+Processing input file /var/www/html/temp/20151020113730357408_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20151020113730357408_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3586P x 881L.
+Processing input file /var/www/html/temp/20151020113732862555_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20151020113732862555_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3586P x 881L.
+Processing input file /var/www/html/temp/20151020113735905058_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20151020113735905058_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
+Creating output file that is 3586P x 881L.
+Processing input file /var/www/html/temp/20151020113738759089_3035.tiff.
+Using internal nodata values (eg. 0) for image /var/www/html/temp/20151020113738759089_3035.tiff.
+0...10...20...30...40...50...60...70...80...90...100 - done.
