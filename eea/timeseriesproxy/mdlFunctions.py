@@ -7,15 +7,18 @@ from datetime import datetime, date
 from gdalconst import GA_ReadOnly
 from osgeo import ogr
 from osgeo import osr
-from owslib.util import openURL #, testXMLValue
+from owslib.util import openURL  # , testXMLValue
 from urllib import urlencode
-from xml.dom.minidom import parseString     #parse,
+from xml.dom.minidom import parseString  # parse,
 import ConfigParser
 import gdal
+import logging
 import numpy as np
 import os
 import struct
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('eea.timeseriesproxy')
 
 # from owslib.wms import WebMapService
 # from statistics import mode
@@ -32,7 +35,7 @@ import struct
 #from array import *
 #from datetime import *
 #from gdalconst import *
-#from math import exp    #log,
+# from math import exp    #log,
 #from owslib.wcs import WebCoverageService as w
 #from owslib.wfs import WebFeatureService
 #from urllib2 import urlopen
@@ -42,114 +45,114 @@ import struct
 # Added python in order to retrieve the correct path of ini file.
 strGIniFile = os.getcwd() + '/python/data.ini'
 # GeoServer
-strGGS=''
+strGGS = ''
 # GeoNetwork
-strGGN=''
+strGGN = ''
 # WPS
-strGOWSWPS=''
+strGOWSWPS = ''
 # WFS
-strGOWSWFS=''
+strGOWSWFS = ''
 # WMS
-strGOWSWMS=''
+strGOWSWMS = ''
 # CSW
-strGOWSCSW=''
+strGOWSCSW = ''
 # OWS
-strGOWS=''
+strGOWS = ''
 
-strGPhysPathTemporaryDir=""
-strGHttpPathTemporaryDir=""
+strGPhysPathTemporaryDir = ""
+strGHttpPathTemporaryDir = ""
 
 # WCS settings
-strGWCSService='WCS'
-strGWCSVersion='1.0.0'
-strGWCSRequest='GetCoverage';
+strGWCSService = 'WCS'
+strGWCSVersion = '1.0.0'
+strGWCSRequest = 'GetCoverage'
 
 # WMS settings
-strGWMSService='WMS'
-strGWMSVersion='1.1.0'
-strGWMSRequestMap='GetMap';
-strGWMSRequestLegend='GetLegendGraphic';
+strGWMSService = 'WMS'
+strGWMSVersion = '1.1.0'
+strGWMSRequestMap = 'GetMap'
+strGWMSRequestLegend = 'GetLegendGraphic'
 
 # WFS settings
-strGWFSService='WFS'
-strGWFSVersion='1.0.0'
-strGWFSRequest='GetFeature';
+strGWFSService = 'WFS'
+strGWFSVersion = '1.0.0'
+strGWFSRequest = 'GetFeature'
 
 # WPS settings
-strGWPSService='WPS'
-strGWPSVersion='1.0.0'
-strGWPSRequest='ras:CropCoverage';
+strGWPSService = 'WPS'
+strGWPSVersion = '1.0.0'
+strGWPSRequest = 'ras:CropCoverage'
 
 # CSW settings
-strGCSWService='CSW'
-strGCSWVersion='2.0.2'
-strGCSWRequest='GetRecordById';
-strGCSWElementName='brief';
-strGCSWElementNameFull='full';
-strGCSWOutputSchema='csw:IsoRecord';
+strGCSWService = 'CSW'
+strGCSWVersion = '2.0.2'
+strGCSWRequest = 'GetRecordById'
+strGCSWElementName = 'brief'
+strGCSWElementNameFull = 'full'
+strGCSWOutputSchema = 'csw:IsoRecord'
 
 # EPSG codes
-strGEPSGF4326Proj='EPSG:4326'
-strGEPSGF900913Proj='EPSG:900913'
-cont=0
+strGEPSGF4326Proj = 'EPSG:4326'
+strGEPSGF900913Proj = 'EPSG:900913'
+cont = 0
 strGGeometry = ''
-strGGetCap=''
-blnFromGeoNetwork=1
-strGBBox=''
+strGGetCap = ''
+blnFromGeoNetwork = 1
+strGBBox = ''
 # position of dataset string saved into the the configuration file
-lngGPosIni_Enabled=0;
-lngGPosIni_Name=1;
-lngGPosIni_Description=2;
-lngGPosIni_GeoNetID=3;
-lngGPosIni_Colors=4;
-lngGPosIni_DataType=5;
-lngGPosIni_Formula=6;
-lngGPosIni_Interval=7;
-lngGPosIni_FixedInterval=8;
-lngGPosIni_ReturnID=9;
-lngGPosIni_OwnerGroup=10;
-lngGPosIni_OwnerSubGroup=11;
-lngGPosIni_Legend=12;
-lngGPosIni_Sd=13;
-lngGPosIni_ShapeValues=14;
-lngGPosIni_dateFormat=15;
-lngGPosIni_Scenario=16;
+lngGPosIni_Enabled = 0
+lngGPosIni_Name = 1
+lngGPosIni_Description = 2
+lngGPosIni_GeoNetID = 3
+lngGPosIni_Colors = 4
+lngGPosIni_DataType = 5
+lngGPosIni_Formula = 6
+lngGPosIni_Interval = 7
+lngGPosIni_FixedInterval = 8
+lngGPosIni_ReturnID = 9
+lngGPosIni_OwnerGroup = 10
+lngGPosIni_OwnerSubGroup = 11
+lngGPosIni_Legend = 12
+lngGPosIni_Sd = 13
+lngGPosIni_ShapeValues = 14
+lngGPosIni_dateFormat = 15
+lngGPosIni_Scenario = 16
 
 # Ini settings
-strGIniCIndicatorDataset='CLIMATEINDICATOR_DATASET'
+strGIniCIndicatorDataset = 'CLIMATEINDICATOR_DATASET'
 
-strGIniSectionPdf='PDF_CONFIGURATION';
-strGIniPdf_copyrightConf='PDF_COPYRIGHT_CONF'
-strGIniPdf_copyrightText='PDF_COPYRIGHT_TEXT'
-strGIniPdf_copyrightReplace='PDF_COPYRIGHT_REPLACE'
+strGIniSectionPdf = 'PDF_CONFIGURATION'
+strGIniPdf_copyrightConf = 'PDF_COPYRIGHT_CONF'
+strGIniPdf_copyrightText = 'PDF_COPYRIGHT_TEXT'
+strGIniPdf_copyrightReplace = 'PDF_COPYRIGHT_REPLACE'
 
-strGIniNationalLinks='NATIONAL_LINKS'
-strGIniNLink_layer='NATIONALLINK_LAYER'
-strGIniNLink_cahttp='NATIONALLINK_CAHTTP'
-strGIniNLink_natField='NATIONALLINK_NATFIELD'
-strGIniNLink_meteoField='NATIONALLINK_METEOFIELD'
+strGIniNationalLinks = 'NATIONAL_LINKS'
+strGIniNLink_layer = 'NATIONALLINK_LAYER'
+strGIniNLink_cahttp = 'NATIONALLINK_CAHTTP'
+strGIniNLink_natField = 'NATIONALLINK_NATFIELD'
+strGIniNLink_meteoField = 'NATIONALLINK_METEOFIELD'
 
-strGIniSystem='SYSTEM'
-strGIniSystem_pathTempDir='PATH_TEMPORARY_DIR'
-strGIniSystem_httpTempDir='HTTP_TEMPORARY_DIR'
-strGIniSystem_pathHtmlDir='PATH_HTML_DIR'
-strGIniSystem_httpGeoServer='HTTP_GS'
-strGIniSystem_httpGeoNetwork='HTTP_GN'
+strGIniSystem = 'SYSTEM'
+strGIniSystem_pathTempDir = 'PATH_TEMPORARY_DIR'
+strGIniSystem_httpTempDir = 'HTTP_TEMPORARY_DIR'
+strGIniSystem_pathHtmlDir = 'PATH_HTML_DIR'
+strGIniSystem_httpGeoServer = 'HTTP_GS'
+strGIniSystem_httpGeoNetwork = 'HTTP_GN'
 
-strGIniSectionGraph='GRAPH_CONFIGURATION'
-strGGraph_Title='GRAPH_TITLE'
-strGGraph_xTitle='GRAPH_XTITLE'
-strGGraph_width='GRAPH_WIDTH'
-strGGraph_height='GRAPH_HEIGHT'
-strGGraph_numY1Dataset='GRAPH_NUM_Y1_MAXDATASET'
-strGGraph_numY2Dataset='GRAPH_NUM_Y2_MAXDATASET'
-strGGraph_numDecPlaces='GRAPH_NUMDPLACES'
-strGGraph_refreshMSec='GRAPH_REFRESH_MSECONDS'
-strGMView_numMaxLayers='GRAPH_MVIEW_MAXLAYERS'
-strGMView_latLongNPlaces='GRAPH_MVIEW_LATLONG_NUMDPLACES'
+strGIniSectionGraph = 'GRAPH_CONFIGURATION'
+strGGraph_Title = 'GRAPH_TITLE'
+strGGraph_xTitle = 'GRAPH_XTITLE'
+strGGraph_width = 'GRAPH_WIDTH'
+strGGraph_height = 'GRAPH_HEIGHT'
+strGGraph_numY1Dataset = 'GRAPH_NUM_Y1_MAXDATASET'
+strGGraph_numY2Dataset = 'GRAPH_NUM_Y2_MAXDATASET'
+strGGraph_numDecPlaces = 'GRAPH_NUMDPLACES'
+strGGraph_refreshMSec = 'GRAPH_REFRESH_MSECONDS'
+strGMView_numMaxLayers = 'GRAPH_MVIEW_MAXLAYERS'
+strGMView_latLongNPlaces = 'GRAPH_MVIEW_LATLONG_NUMDPLACES'
 
-arrayValues=''
-strGFileServiceHttp=''
+arrayValues = ''
+strGFileServiceHttp = ''
 
 
 def _returnGraphTitle(arrayParams):
@@ -157,21 +160,23 @@ def _returnGraphTitle(arrayParams):
     Function used to return the title of the graph.
     """
 
-    #print arrayParams
-    strTitle=_returnIniValue('GRAPH_CONFIGURATION', 'GRAPH_TITLE');
+    # print arrayParams
+    strTitle = _returnIniValue('GRAPH_CONFIGURATION', 'GRAPH_TITLE')
 
-    if (arrayParams["shapeInfo"]=="selection"):
-        strTitle+=': '+arrayParams["shapeInfo"]
+    if (arrayParams["shapeInfo"] == "selection"):
+        strTitle += ': ' + arrayParams["shapeInfo"]
     else:
-        if (arrayParams["operation"]=="POINT"):
-            strTitle+=': point (lat '+arrayParams["txtLLat"]+'&deg;, lon '+arrayParams["txtLLon"]+'&deg;)'
+        if (arrayParams["operation"] == "POINT"):
+            strTitle += ': point (lat ' + arrayParams[
+                "txtLLat"] + '&deg;, lon ' + arrayParams["txtLLon"] + '&deg;)'
         else:
-            if (arrayParams["operation"]=="BOX"):
-                strTitle+=': box (lat '+arrayParams["txtLLat"]+'&deg;;'+arrayParams["txtULat"]+'&deg;, lon '+arrayParams["txtLLon"]+'&deg;;'+arrayParams["txtRLon"]+'&deg;)'
+            if (arrayParams["operation"] == "BOX"):
+                strTitle += ': box (lat ' + arrayParams["txtLLat"] + '&deg;;' + arrayParams[
+                    "txtULat"] + '&deg;, lon ' + arrayParams["txtLLon"] + '&deg;;' + arrayParams["txtRLon"] + '&deg;)'
             else:
-                if (arrayParams["operation"]=="SHAPE"):
-                    strTitle+=': '+arrayParams["shapeInfo"]
-                #else:
+                if (arrayParams["operation"] == "SHAPE"):
+                    strTitle += ': ' + arrayParams["shapeInfo"]
+                # else:
                 #   if (arrayParams["operation"]=="SELECTION"):
                 #       strTitle+=': selection'
 
@@ -179,175 +184,180 @@ def _returnGraphTitle(arrayParams):
 
 
 def _returnHttpGN():
-    global strGIniSystem;
-    global strGIniSystem_httpGeoNetwork;
-    global strGGN;
-    if (strGGN==""):
-        strGGN=_returnIniValue(strGIniSystem, strGIniSystem_httpGeoNetwork)
+    global strGIniSystem
+    global strGIniSystem_httpGeoNetwork
+    global strGGN
+    if (strGGN == ""):
+        strGGN = _returnIniValue(strGIniSystem, strGIniSystem_httpGeoNetwork)
 
-    return strGGN;
+    return strGGN
 
 
 def _returnHttpGS():
-    global strGIniSystem;
-    global strGIniSystem_httpGeoServer;
-    global strGGS;
-    if (strGGS==""):
-        strGGS=_returnIniValue(strGIniSystem, strGIniSystem_httpGeoServer)
+    global strGIniSystem
+    global strGIniSystem_httpGeoServer
+    global strGGS
+    if (strGGS == ""):
+        strGGS = _returnIniValue(strGIniSystem, strGIniSystem_httpGeoServer)
 
-    return strGGS;
+    return strGGS
 
 
 def _returnVariableDef(strType):
 
-    if (strType=="WPS"):
+    if (strType == "WPS"):
         # WPS
-        global strGOWSWPS;
-        if (strGOWSWPS==""):
-            strGOWSWPS=_returnHttpGS()+"TestWfsPost"
-        return strGOWSWPS;
+        global strGOWSWPS
+        if (strGOWSWPS == ""):
+            strGOWSWPS = _returnHttpGS() + "TestWfsPost"
+        return strGOWSWPS
     else:
-        if (strType=="WFS"):
+        if (strType == "WFS"):
             # WFS
-            global strGOWSWFS;
-            if (strGOWSWFS==""):
-                strGOWSWFS=_returnHttpGS()+"wfs?"
-            return strGOWSWFS;
+            global strGOWSWFS
+            if (strGOWSWFS == ""):
+                strGOWSWFS = _returnHttpGS() + "wfs?"
+            return strGOWSWFS
         else:
-            if (strType=="WMS"):
+            if (strType == "WMS"):
                 # WMS
-                global strGOWSWMS;
-                if (strGOWSWMS==""):
-                    strGOWSWMS=_returnHttpGS()+"wms?"
-                return strGOWSWMS;
+                global strGOWSWMS
+                if (strGOWSWMS == ""):
+                    strGOWSWMS = _returnHttpGS() + "wms?"
+                return strGOWSWMS
             else:
-                if (strType=="OWS"):
+                if (strType == "OWS"):
                     # OWS
-                    global strGOWS;
-                    if (strGOWS==""):
-                        strGOWS=_returnHttpGS()+"/ows?strict=true"
-                    return strGOWS;
+                    global strGOWS
+                    if (strGOWS == ""):
+                        strGOWS = _returnHttpGS() + "/ows?strict=true"
+                    return strGOWS
                 else:
-                    if (strType=="CSW"):
+                    if (strType == "CSW"):
                         # CSW
-                        global strGOWSCSW;
-                        if (strGOWSCSW==""):
-                            strGOWSCSW=_returnHttpGN()+"/srv/eng/csw?"
-                        return strGOWSCSW;
+                        global strGOWSCSW
+                        if (strGOWSCSW == ""):
+                            strGOWSCSW = _returnHttpGN() + "/srv/eng/csw?"
+                        return strGOWSCSW
 
                     # WMS
                     else:
-                        return "";
-    return "";
+                        return ""
+    return ""
 
 
-def _saveExec(strHTTP,strParams):
+def _saveExec(strHTTP, strParams):
     """
     Function used to trace each http execution.
     """
     global strGFileServiceHttp
-    if (strGFileServiceHttp==''):
-        strSection='TRACE'
-        strKey='TRACE_HTTPSERVICE_FILE'
-        strGFileServiceHttp=str(_returnIniValue(strSection,strKey))
+    if (strGFileServiceHttp == ''):
+        strSection = 'TRACE'
+        strKey = 'TRACE_HTTPSERVICE_FILE'
+        strGFileServiceHttp = str(_returnIniValue(strSection, strKey))
 
-    if (strGFileServiceHttp!=""):
-        f = open(strGFileServiceHttp,'a')
-        f.write("\n"+strHTTP+' '+strParams)
-        #print "\n"+strHTTP+' '+strParams
+    if (strGFileServiceHttp != ""):
+        f = open(strGFileServiceHttp, 'a')
+        f.write("\n" + strHTTP + ' ' + strParams)
+        # print "\n"+strHTTP+' '+strParams
         f.close()
-    return "";
+    return ""
 
 
-def _executeURL(strHTTP,strParams,strMethod):
+def _executeURL(strHTTP, strParams, strMethod):
     """
     Function used to execute a http request.
     """
     strData = urlencode(strParams)
     # trace
-    _saveExec(strHTTP,strData);
+    _saveExec(strHTTP, strData)
 
-    output=openURL(strHTTP, strData, strMethod)
+    output = openURL(strHTTP, strData, strMethod)
 
     return output
 
 
-def _returnEncodedArrayLayers(strType,strReturn,blnLoadOnlyValues):
+def _returnEncodedArrayLayers(strType, strReturn, blnLoadOnlyValues):
     # for all layers saved into configuration file
-    arrayDatasets=returnVariablesList(strType);
+    arrayDatasets = returnVariablesList(strType)
 
-    arrayLayers=[]
-    arrayOrder=[]
+    arrayLayers = []
+    arrayOrder = []
 
     for singleDataset in arrayDatasets:
 
-        blnExtract=0
+        blnExtract = 0
         if (strReturn == ""):
-            blnExtract=1
+            blnExtract = 1
         else:
             if (singleDataset[lngGPosIni_Name] == strReturn):
-                blnExtract=1
-        if (blnExtract==1):
-            if (singleDataset[lngGPosIni_Enabled]!="0"):
-                arrayReturn={}
-                arrayReturn["enabled"]=singleDataset[lngGPosIni_Enabled]
+                blnExtract = 1
+        if (blnExtract == 1):
+            if (singleDataset[lngGPosIni_Enabled] != "0"):
+                arrayReturn = {}
+                arrayReturn["enabled"] = singleDataset[lngGPosIni_Enabled]
 
-                arrayReturn["value"]=str(singleDataset[lngGPosIni_Name])
-                arrayReturn["label"]=singleDataset[lngGPosIni_Description]
-                arrayReturn["category"]=""
-                arrayReturn["owner"]=singleDataset[lngGPosIni_OwnerGroup]
-                arrayReturn["subgroup"]=singleDataset[lngGPosIni_OwnerSubGroup]
-                arrayReturn["scenario"]=''
-                if (lngGPosIni_Scenario<len(singleDataset)):
-                    arrayReturn["scenario"]=singleDataset[lngGPosIni_Scenario]
-                arrayReturn["datatype"]=singleDataset[lngGPosIni_DataType]
-                arrayReturn["interval"]=singleDataset[lngGPosIni_Interval]
-                arrayReturn["fixedinterval"]=singleDataset[lngGPosIni_FixedInterval]
-                arrayReturn["dateFormat"]='YYYYMMDD'
-                if (lngGPosIni_dateFormat<len(singleDataset)):
-                    arrayReturn["dateFormat"]=singleDataset[lngGPosIni_dateFormat]
-                arrayReturn["id"]=singleDataset[lngGPosIni_GeoNetID]
+                arrayReturn["value"] = str(singleDataset[lngGPosIni_Name])
+                arrayReturn["label"] = singleDataset[lngGPosIni_Description]
+                arrayReturn["category"] = ""
+                arrayReturn["owner"] = singleDataset[lngGPosIni_OwnerGroup]
+                arrayReturn["subgroup"] = singleDataset[
+                    lngGPosIni_OwnerSubGroup]
+                arrayReturn["scenario"] = ''
+                if (lngGPosIni_Scenario < len(singleDataset)):
+                    arrayReturn["scenario"] = singleDataset[
+                        lngGPosIni_Scenario]
+                arrayReturn["datatype"] = singleDataset[lngGPosIni_DataType]
+                arrayReturn["interval"] = singleDataset[lngGPosIni_Interval]
+                arrayReturn["fixedinterval"] = singleDataset[
+                    lngGPosIni_FixedInterval]
+                arrayReturn["dateFormat"] = 'YYYYMMDD'
+                if (lngGPosIni_dateFormat < len(singleDataset)):
+                    arrayReturn["dateFormat"] = singleDataset[
+                        lngGPosIni_dateFormat]
+                arrayReturn["id"] = singleDataset[lngGPosIni_GeoNetID]
 
-                if (blnLoadOnlyValues==0):
+                if (blnLoadOnlyValues == 0):
                     # return attributes from GN
-                    arrayParams=_returnDatasetAttributes(singleDataset[lngGPosIni_GeoNetID],singleDataset[lngGPosIni_DataType])
+                    arrayParams = _returnDatasetAttributes(
+                        singleDataset[lngGPosIni_GeoNetID], singleDataset[lngGPosIni_DataType])
 
                     arrayReturn["fromDate"] = str(arrayParams["fromDate"])
                     arrayReturn["toDate"] = str(arrayParams["toDate"])
 
-                arrayLayers.append(arrayReturn);
+                arrayLayers.append(arrayReturn)
 
                 # save the order
-                arrayOrder.append(singleDataset[lngGPosIni_Description]);
-    #return the sorted array
-    arrayPosition=sorted(range(len(arrayOrder)), key=lambda k: arrayOrder[k])
+                arrayOrder.append(singleDataset[lngGPosIni_Description])
+    # return the sorted array
+    arrayPosition = sorted(range(len(arrayOrder)), key=lambda k: arrayOrder[k])
 
-    arrayReturn=[]
+    arrayReturn = []
     for pos in arrayPosition:
-        arrayReturn.append(arrayLayers[pos]);
+        arrayReturn.append(arrayLayers[pos])
 
     return arrayReturn
 
 
-def _returnOwnerFromArrayLayers(arrayLayers,blnGraph):
+def _returnOwnerFromArrayLayers(arrayLayers, blnGraph):
     """
     Function used to retrieve all groups.
     """
-    arrayOwner=[]
+    arrayOwner = []
 
     # save the owner into an array
     for singleDataset in arrayLayers:
-        if (blnGraph==1):
-            if (singleDataset["enabled"]=="1"):
-                arrayOwner.append(singleDataset["owner"]);
+        if (blnGraph == 1):
+            if (singleDataset["enabled"] == "1"):
+                arrayOwner.append(singleDataset["owner"])
         else:
-            if ((singleDataset["enabled"]!="0") and (singleDataset["scenario"]=="")):
-                arrayOwner.append(singleDataset["owner"]);
+            if ((singleDataset["enabled"] != "0") and (singleDataset["scenario"] == "")):
+                arrayOwner.append(singleDataset["owner"])
     # and then remove all empty and duplicate values
     yset = set(arrayOwner)
-    arrayOwner=[]
+    arrayOwner = []
     for singleDataset in yset:
-        arrayOwner.append(singleDataset);
+        arrayOwner.append(singleDataset)
     return arrayOwner
 
 
@@ -356,20 +366,20 @@ def _returnSubOwnerDescr():
     Function used to read from configuration file all possible values (id_label)
     in order to split all dataset into sub-groups.
     """
-    global strGIniCIndicatorDataset;
-    arrayValues=[]
+    global strGIniCIndicatorDataset
+    arrayValues = []
     # [SUBOWNER_DATASET]
     # sowner_string=O_Observations<%%>P_Projections<%%>R<%%>Re-Analisys
-    strTemp=_returnIniValue(strGIniCIndicatorDataset,"cidataset_string")
+    strTemp = _returnIniValue(strGIniCIndicatorDataset, "cidataset_string")
 
     arrayTemp = strTemp.split('<%%>')
     for strTemp in arrayTemp:
-        arrayValue=strTemp.split('_')
-        arrayToReturn={}
-        arrayToReturn["id"]=arrayValue[0]
-        arrayToReturn["label"]=arrayValue[1]
-        arrayValues.append(arrayToReturn);
-    return arrayValues;
+        arrayValue = strTemp.split('_')
+        arrayToReturn = {}
+        arrayToReturn["id"] = arrayValue[0]
+        arrayToReturn["label"] = arrayValue[1]
+        arrayValues.append(arrayToReturn)
+    return arrayValues
 
 
 def _returnGroupFromArrayLayers(arrayLayers):
@@ -377,27 +387,27 @@ def _returnGroupFromArrayLayers(arrayLayers):
     Function used to retrieve all groups available.
     """
 
-    arrayGroup=[]
+    arrayGroup = []
     for singleDataset in arrayLayers:
-        arrayGroup.append(singleDataset["subgroup"]);
+        arrayGroup.append(singleDataset["subgroup"])
     yset = set(arrayGroup)
 
-    arraySubOwner=_returnSubOwnerDescr();
+    arraySubOwner = _returnSubOwnerDescr()
 
-    arrayReturns=[]
+    arrayReturns = []
     for singleDataset in yset:
-        arrayReturn={}
-        if (str(singleDataset)!=""):
-            arrayReturn["groupid"]=str(singleDataset)
+        arrayReturn = {}
+        if (str(singleDataset) != ""):
+            arrayReturn["groupid"] = str(singleDataset)
             for arrayToCheck in arraySubOwner:
-                if (arrayToCheck["id"]==singleDataset):
-                    arrayReturn["grouplabel"]=arrayToCheck["label"];
-            arrayGroup=[]
+                if (arrayToCheck["id"] == singleDataset):
+                    arrayReturn["grouplabel"] = arrayToCheck["label"]
+            arrayGroup = []
             for arrayLayer in arrayLayers:
-                if (arrayLayer["subgroup"]==singleDataset):
-                    arrayGroup.append(arrayLayer);
-            arrayReturn["data"]=arrayGroup
-            arrayReturns.append(arrayReturn);
+                if (arrayLayer["subgroup"] == singleDataset):
+                    arrayGroup.append(arrayLayer)
+            arrayReturn["data"] = arrayGroup
+            arrayReturns.append(arrayReturn)
     return arrayReturns
 
 
@@ -407,8 +417,9 @@ def _returnMetadataLink(lngID):
     """
 
     # return GN link
-    strMetadata=_returnHttpGN()+"/srv/en/metadata.show"+'?currTab=simple&uuid='+lngID+''
-    return strMetadata;
+    strMetadata = _returnHttpGN() + "/srv/en/metadata.show" + \
+        '?currTab=simple&uuid=' + lngID + ''
+    return strMetadata
 
 
 def _returnIniFile():
@@ -416,85 +427,95 @@ def _returnIniFile():
     Function used to return the name of ini configuration file
     """
     global strGIniFile
+    # TODO: use pkg_resources to discover this file
     return '/var/www/cgi-bin/python/data.ini'
     # return global ini filename
-    return strGIniFile;
+    return strGIniFile
 
 
-def _returnGetMapLink(arrayFName,arrayVDataset,strYear,strMonth):
+def _returnGetMapLink(arrayFName, arrayVDataset, strYear, strMonth):
     """
     Function used to retrieve a map of a variable in order to put into a pdf file
     """
-    strLink=''
+    strLink = ''
 
-    strLink=arrayVDataset["ows"]
-    if (strMonth!="None"):
-        strDate=strYear+strMonth
+    strLink = arrayVDataset["ows"]
+    if (strMonth != "None"):
+        strDate = strYear + strMonth
     else:
-        strDate=strYear
+        strDate = strYear
 
-    strDate=strDate.replace("-", "");
+    strDate = strDate.replace("-", "")
 
     if (arrayVDataset["serverType"] == "MAPSERVER"):
-        strLink+="&";
-        strTime=""
+        strLink += "&"
+        strTime = ""
 
-        if (arrayFName["type"]=="r_d"):
-            strLayer=arrayFName["name"].replace("YYYYMMDD", strDate);
+        if (arrayFName["type"] == "r_d"):
+            strLayer = arrayFName["name"].replace("YYYYMMDD", strDate)
         else:
-            if (arrayFName["type"]=="r_m"):
-                strLayer=arrayFName["name"]
-                strTime=str(strDate)[:4]+'-'+str(strDate)[4:-2]+'-'+str(strDate)[6:]
-                #http://devfapar.ies.jrc.it/cgi-bin/mapserv?map=/srv/www/dvpt/WWW/Data/Pages/FAPAR_ELIS/mapserver/wms/ELIS/wms-t.map&service=WMS&version=1.1.0&request=GetMap&layers=test&styles=&bbox=-32,25,70.0,72.0&srs=EPSG:4326&format=image/png&width=600&height=400&time=2008-08-21
+            if (arrayFName["type"] == "r_m"):
+                strLayer = arrayFName["name"]
+                strTime = str(strDate)[
+                    :4] + '-' + str(strDate)[4:-2] + '-' + str(strDate)[6:]
+                # http://devfapar.ies.jrc.it/cgi-bin/mapserv?map=/srv/www/dvpt/WWW/Data/Pages/FAPAR_ELIS/mapserver/wms/ELIS/wms-t.map&service=WMS&version=1.1.0&request=GetMap&layers=test&styles=&bbox=-32,25,70.0,72.0&srs=EPSG:4326&format=image/png&width=600&height=400&time=2008-08-21
             else:
-                if (arrayFName["type"]=="s_m"):
-                    strTempDate=str(strDate)
-                    strLayer=arrayFName["name"].replace("REPLACEKEY", strTempDate);
+                if (arrayFName["type"] == "s_m"):
+                    strTempDate = str(strDate)
+                    strLayer = arrayFName["name"].replace(
+                        "REPLACEKEY", strTempDate)
     else:
-        strLink+="?";
-        strTempName=''
-        strTime=''
+        strLink += "?"
+        strTempName = ''
+        strTime = ''
 
-        if (arrayFName["type"]=="r_m"):
-            strTempDate=str(strDate)[:4]+'-'+str(strDate)[4:-2]+'-'+str(strDate)[6:]
-            strTime=strTempDate+'T00:00:00.000Z'
-            strTempName=arrayFName["name"]
+        if (arrayFName["type"] == "r_m"):
+            strTempDate = str(
+                strDate)[:4] + '-' + str(strDate)[4:-2] + '-' + str(strDate)[6:]
+            strTime = strTempDate + 'T00:00:00.000Z'
+            strTempName = arrayFName["name"]
         else:
-            if (arrayFName["type"]=="s_m"):
-                strTempDate=str(strDate)
-                strTempName=arrayFName["name"].replace("REPLACEKEY", strTempDate);
+            if (arrayFName["type"] == "s_m"):
+                strTempDate = str(strDate)
+                strTempName = arrayFName["name"].replace(
+                    "REPLACEKEY", strTempDate)
             else:
-                if (arrayFName["type"]=="r_d"):
-                    strTempDate=str(strDate)[:4]+'-'+str(strDate)[4:-2]+'-'+str(strDate)[6:]
-                    strTempD=str(strTempDate)[:4]+str(strTempDate)[5:len(strTempDate)-3]+str(strTempDate)[8:len(strTempDate)];
+                if (arrayFName["type"] == "r_d"):
+                    strTempDate = str(
+                        strDate)[:4] + '-' + str(strDate)[4:-2] + '-' + str(strDate)[6:]
+                    strTempD = str(strTempDate)[
+                        :4] + str(strTempDate)[5:len(strTempDate) - 3] + str(strTempDate)[8:len(strTempDate)]
 
-                    strTempName=arrayFName["name"].replace("YYYYMMDD", strTempD);
+                    strTempName = arrayFName[
+                        "name"].replace("YYYYMMDD", strTempD)
                 else:
-                    strTempName=arrayFName["name"]
-        strLayer=arrayFName["store"]+':'+strTempName
+                    strTempName = arrayFName["name"]
+        strLayer = arrayFName["store"] + ':' + strTempName
 
-    global strGEPSGF4326Proj;
+    global strGEPSGF4326Proj
 
     # return reprojected values
-    strBBox=_returnProjectedValues(str(arrayVDataset['westBoundLongitude']),str(arrayVDataset['southBoundLatitude']),str(arrayVDataset['eastBoundLongitude']),str(arrayVDataset['northBoundLatitude']),strGEPSGF4326Proj,strGEPSGF4326Proj);
+    strBBox = _returnProjectedValues(str(arrayVDataset['westBoundLongitude']), str(arrayVDataset['southBoundLatitude']), str(
+        arrayVDataset['eastBoundLongitude']), str(arrayVDataset['northBoundLatitude']), strGEPSGF4326Proj, strGEPSGF4326Proj)
 
-
-    global strGWMSService;
-    global strGWMSVersion;
-    global strGWMSRequestMap;
+    global strGWMSService
+    global strGWMSVersion
+    global strGWMSRequestMap
 
     # WMS link
-    strLink+='service='+strGWMSService+'&version='+strGWMSVersion+'&request='+strGWMSRequestMap+'&layers='+strLayer+'&styles=&bbox='+strBBox+'&srs='+strGEPSGF4326Proj+'&format=image/png&width=600&height=400'
+    strLink += 'service=' + strGWMSService + '&version=' + strGWMSVersion + '&request=' + strGWMSRequestMap + '&layers=' + \
+        strLayer + '&styles=&bbox=' + strBBox + '&srs=' + \
+        strGEPSGF4326Proj + '&format=image/png&width=600&height=400'
 
     # add time
-    if (strTime!=""):
-        strLink+='&time='+strTime
+    if (strTime != ""):
+        strLink += '&time=' + strTime
     # save and exec the link
-    _saveExec(arrayVDataset["ows"],strLink);
+    _saveExec(arrayVDataset["ows"], strLink)
     return strLink
 
 
-def _saveFile(request,strHTTP):
+def _saveFile(request, strHTTP):
     """
     Function used to save the result of an http request into a file
     """
@@ -503,16 +524,16 @@ def _saveFile(request,strHTTP):
         #import urllib
         #output = urlopen("http://emis.jrc.ec.europa.eu/cgi-bin/mapserv?map=%2Fsrv%2Fwww%2Fhtdocs%2Fwms%2Fwcs-t_4km.map&service=WCS&format=geotiff&crs=EPSG%3A4326&request=GetCoverage&height=3&width=3&version=1.1.0&BBox=-17.1708958225%2C42.598476950799999%2C-17.020504177499998%2C42.713723049199999&coverage=EMIS_T_ANO_SST&time=2000-02")
         #output = urlopen("http://fapar.jrc.ec.europa.eu/cgi-bin/mapserv?map=%2Fsrv%2Fwww%2Fhtdocs%2FWWW%2FData%2FPages%2FFAPAR_ELIS%2Fmapserver%2Fwms%2FELIS%2Fwms.map&service=WCS&format=geotiff&crs=EPSG%3A4326&request=GetCoverage&height=3&width=3&version=1.1.0&BBox=-17.121778619400001%2C42.638820588199998%2C-17.069621380600001%2C42.673379411799999&coverage=fapar_19980101")
-        #print "=============================="
-        #print output.read()
-        #print "=============================="
-        #exit(0);
-        output=_executeURL(strHTTP, request, 'Post');
+        # print "=============================="
+        # print output.read()
+        # print "=============================="
+        # exit(0);
+        output = _executeURL(strHTTP, request, 'Post')
 
         # return the filename
-        strFilename=_returnFilename()
+        strFilename = _returnFilename()
         # write the result
-        f = open(strFilename,'wb')
+        f = open(strFilename, 'wb')
         f.write(output.read())
         f.close()
 
@@ -535,24 +556,23 @@ def _saveFile(request,strHTTP):
         return data
     except:
         _deleteFile(strFilename)
-        return "";
+        return ""
 
 
 def _returnReplaceDatasetIndicator():
 
     config = ConfigParser.ConfigParser()
-    strIniFile=_returnIniFile();
+    strIniFile = _returnIniFile()
     config.read(strIniFile)
 
-
-    strSection="DATASET_INDICATOR"
+    strSection = "DATASET_INDICATOR"
 
     lngTemp = config.get(strSection, "num_replacedatasetindicator")
 
-    arrayTemp = range(1,int(lngTemp)+1,1)
-    arrayReplace=[]
+    arrayTemp = range(1, int(lngTemp) + 1, 1)
+    arrayReplace = []
     for m in arrayTemp:
-        strVarNum="replacedatasetindicator_"+str(m);
+        strVarNum = "replacedatasetindicator_" + str(m)
 
         strTemp = config.get(strSection, strVarNum)
 
@@ -563,47 +583,46 @@ def _returnReplaceDatasetIndicator():
 
 
 def _returnDatasetIndicatorGroup():
-    arrayReturn=[]
+    arrayReturn = []
 
     config = ConfigParser.ConfigParser()
-    strIniFile=_returnIniFile();
+    strIniFile = _returnIniFile()
     config.read(strIniFile)
 
-
-    strSection="DATASET_INDICATOR"
+    strSection = "DATASET_INDICATOR"
 
     lngTemp = config.get(strSection, "num_replacedatasetindicator")
-    arrayTemp = range(1,int(lngTemp)+1,1)
-    arrayReplace=[]
+    arrayTemp = range(1, int(lngTemp) + 1, 1)
+    arrayReplace = []
     for m in arrayTemp:
-        strVarNum="replacedatasetindicator_"+str(m);
+        strVarNum = "replacedatasetindicator_" + str(m)
 
         strTemp = config.get(strSection, strVarNum)
         arrayTemp = strTemp.split('<%%>')
         arrayReplace.append(arrayTemp)
 
-    strKeyValue="datasetindicator_"
+    strKeyValue = "datasetindicator_"
     lngTemp = config.get(strSection, "num_datasetindicator")
-    arrayTemp = range(1,int(lngTemp)+1,1)
+    arrayTemp = range(1, int(lngTemp) + 1, 1)
     for m in arrayTemp:
-        strVarNum=strKeyValue+str(m);
+        strVarNum = strKeyValue + str(m)
         strTemp = config.get(strSection, strVarNum)
         arrayTemp = strTemp.split('<%%>')
-        arraySingleIndicator={}
-        arraySingleIndicator["indicator"]=arrayTemp[0]
-        arrayValues=arrayTemp[1].split('_')
+        arraySingleIndicator = {}
+        arraySingleIndicator["indicator"] = arrayTemp[0]
+        arrayValues = arrayTemp[1].split('_')
 
-        arrayValues_graph=''
+        arrayValues_graph = ''
         for strTempV in arrayReplace:
-            if (arrayTemp[1].find(strTempV[0])!=-1):
-                strTemp=arrayTemp[1].replace(strTempV[0], strTempV[1]);
-                arrayValues_graph=strTemp.split('_')
+            if (arrayTemp[1].find(strTempV[0]) != -1):
+                strTemp = arrayTemp[1].replace(strTempV[0], strTempV[1])
+                arrayValues_graph = strTemp.split('_')
 
-        arraySingleIndicator["values_layer"]=arrayValues
-        if (arrayValues_graph==''):
-            arraySingleIndicator["values_graph"]=arrayValues
+        arraySingleIndicator["values_layer"] = arrayValues
+        if (arrayValues_graph == ''):
+            arraySingleIndicator["values_graph"] = arrayValues
         else:
-            arraySingleIndicator["values_graph"]=arrayValues_graph
+            arraySingleIndicator["values_graph"] = arrayValues_graph
         arrayReturn.append(arraySingleIndicator)
 
     return arrayReturn
@@ -614,14 +633,14 @@ def _returnFilename():
     Function used to retrieve a filename used to save the data.
     """
     # common dir
-    global strGPhysPathTemporaryDir;
+    global strGPhysPathTemporaryDir
 
-    if (strGPhysPathTemporaryDir==""):
-        strGPhysPathTemporaryDir=_returnTempDirectory(0);
+    if (strGPhysPathTemporaryDir == ""):
+        strGPhysPathTemporaryDir = _returnTempDirectory(0)
     # filename
-    strName=_returnUniqueFilename()+'.tiff'
+    strName = _returnUniqueFilename() + '.tiff'
     # return physical path
-    return os.path.join(strGPhysPathTemporaryDir,strName)
+    return os.path.join(strGPhysPathTemporaryDir, strName)
 
 
 def _returnUniqueFilename():
@@ -630,13 +649,13 @@ def _returnUniqueFilename():
     """
     import datetime
 
-    #strValue=socket.gethostbyname(socket.gethostname())
-    strValue=''
-    strValue+=str(datetime.datetime.now())
-    strValue=strValue.replace(".", "");
-    strValue=strValue.replace("-", "");
-    strValue=strValue.replace(" ", "");
-    strValue=strValue.replace(":", "");
+    # strValue=socket.gethostbyname(socket.gethostname())
+    strValue = ''
+    strValue += str(datetime.datetime.now())
+    strValue = strValue.replace(".", "")
+    strValue = strValue.replace("-", "")
+    strValue = strValue.replace(" ", "")
+    strValue = strValue.replace(":", "")
 
     return strValue
 
@@ -646,182 +665,188 @@ def queryFeature(arrayFName, arrayVDataset, arrayParams, lngDay, strTempKey,
     """
     Function used to execute a query on a vector.
     """
-    global strGEPSGF4326Proj;
-    global strGEPSGF900913Proj;
+    global strGEPSGF4326Proj
+    global strGEPSGF900913Proj
     # change projection for mapserver
-    if (arrayVDataset["serverType"]=="MAPSERVER"):
-        strToProj=strGEPSGF900913Proj;
+    if (arrayVDataset["serverType"] == "MAPSERVER"):
+        strToProj = strGEPSGF900913Proj
     else:
-        strToProj=strGEPSGF4326Proj;
+        strToProj = strGEPSGF4326Proj
 
-    if (arrayFName["shape_values"]==""):
+    if (arrayFName["shape_values"] == ""):
         # replace the key REPLACEKEY with a valid date
         pos = arrayFName["name"].find("REPLACEKEY")
-        if (pos!=-1):
-            strTempDate=arrayParams["strDate"].replace("-", "");
-            strTemp=arrayFName["name"].replace("REPLACEKEY", strTempDate);
-            if (strTempKey==""):
-                strTempKey=arrayFName["returnid"]
+        if (pos != -1):
+            strTempDate = arrayParams["strDate"].replace("-", "")
+            strTemp = arrayFName["name"].replace("REPLACEKEY", strTempDate)
+            if (strTempKey == ""):
+                strTempKey = arrayFName["returnid"]
         else:
-            strTemp=arrayFName["name"]
+            strTemp = arrayFName["name"]
     else:
         # replace the key REPLACEKEY with all fixed date saved into ini file
         pos = arrayFName["name"].find("REPLACEKEY")
-        if (pos!=-1):
-            strTempDate=arrayParams["strDate"].replace("-", "");
-            strTemp=arrayFName["name"].replace("REPLACEKEY", strTempDate);
+        if (pos != -1):
+            strTempDate = arrayParams["strDate"].replace("-", "")
+            strTemp = arrayFName["name"].replace("REPLACEKEY", strTempDate)
         else:
-            strTemp=arrayFName["name"]
+            strTemp = arrayFName["name"]
 
-        cont=0
+        cont = 0
 
-        if ((strTempKey!="the_geom") and (lngDay!="")):
+        if ((strTempKey != "the_geom") and (lngDay != "")):
             # read the day
             for value in arrayFName["shape_dates"]:
-                if (int(value)==int(lngDay)):
-                    strTempKey=arrayFName["shape_values"][cont]
+                if (int(value) == int(lngDay)):
+                    strTempKey = arrayFName["shape_values"][cont]
                 else:
-                    cont=cont+1
+                    cont = cont + 1
 
-
-    strStoreName=arrayFName["store"];
-    strHttp=arrayVDataset["ows"];
+    strStoreName = arrayFName["store"]
+    strHttp = arrayVDataset["ows"]
     # save the request
 
-    global strGWFSService;
-    global strGWFSVersion;
-    global strGWFSRequest;
-    request = {'service': strGWFSService, 'version': strGWFSVersion, 'request': strGWFSRequest,'srsname':str(strGEPSGF4326Proj)}
+    global strGWFSService
+    global strGWFSVersion
+    global strGWFSRequest
+    request = {'service': strGWFSService, 'version': strGWFSVersion,
+               'request': strGWFSRequest, 'srsname': str(strGEPSGF4326Proj)}
 
-    strBBox=_returnProjectedValues(str(arrayParams['txtLLon']),str(arrayParams['txtLLat']),str(arrayParams['txtLLon']),str(arrayParams['txtLLat']),arrayVDataset["crs"],strToProj);
-    request['BBox']=strBBox
-    blnGeom=0
-    if (strTempKey=="the_geom"):
-        blnGeom=1
+    strBBox = _returnProjectedValues(str(arrayParams['txtLLon']), str(arrayParams['txtLLat']), str(
+        arrayParams['txtLLon']), str(arrayParams['txtLLat']), arrayVDataset["crs"], strToProj)
+    request['BBox'] = strBBox
+    blnGeom = 0
+    if (strTempKey == "the_geom"):
+        blnGeom = 1
     if (arrayVDataset["serverType"] == "MAPSERVER"):
-        request['typeName']=strTemp
-        request['layer']=strTemp
-        if (strTempKey=="the_geom"):
-            strTempKey="msGeometry"
-            if (strStoreName==""):
+        request['typeName'] = strTemp
+        request['layer'] = strTemp
+        if (strTempKey == "the_geom"):
+            strTempKey = "msGeometry"
+            if (strStoreName == ""):
                 arrayTemp = arrayFName["returnid"].split(':')
-                strTempKey=arrayTemp[0]+':'+strTempKey
+                strTempKey = arrayTemp[0] + ':' + strTempKey
     else:
-        request['layer']=strStoreName+':'+strTemp
-        request['typeName']=strStoreName+':'+strTemp
+        request['layer'] = strStoreName + ':' + strTemp
+        request['typeName'] = strStoreName + ':' + strTemp
 
-    if (strStoreName!=""):
-        request['propertyName']=strStoreName+':'+strTempKey;
+    if (strStoreName != ""):
+        request['propertyName'] = strStoreName + ':' + strTempKey
     else:
-        request['propertyName']=strTempKey;
+        request['propertyName'] = strTempKey
 
     # execute the request
-    output=_executeURL(strHttp, request, 'Post');
+    output = _executeURL(strHttp, request, 'Post')
     # XML output
-    strXML=output.read()
+    strXML = output.read()
 
     # error messages
-    strError1="WFS server error";
+    strError1 = "WFS server error"
     pos1 = strXML.find(strError1)
-    strError2="InvalidParameterValue";
+    strError2 = "InvalidParameterValue"
     pos2 = strXML.find(strError2)
-    #strError3="unknown";
+    # strError3="unknown";
     #pos3 = strXML.find(strError3)
 
-    if (pos1==-1 and pos2==-1):
+    if (pos1 == -1 and pos2 == -1):
         xmldoc = parseString(strXML)
         try:
             slides = xmldoc.getElementsByTagName(request['propertyName'])
-            if (blnGeom==1):
+            if (blnGeom == 1):
 
                 if (arrayVDataset["serverType"] == "MAPSERVER"):
                     try:
-                        strValue=slides[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue
+                        strValue = slides[0].childNodes[1].childNodes[1].childNodes[
+                            1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue
                     except:
-                        strValue=slides[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue;
+                        strValue = slides[0].childNodes[1].childNodes[
+                            1].childNodes[1].childNodes[1].childNodes[0].nodeValue
                 else:
-                    strValue= slides[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].nodeValue;
+                    strValue = slides[0].childNodes[0].childNodes[0].childNodes[
+                        0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].nodeValue
 
             else:
-                strValue = str(slides[0].childNodes[0].nodeValue.encode('utf8'))
-            return {'result':1, 'value':strValue}
+                strValue = str(
+                    slides[0].childNodes[0].nodeValue.encode('utf8'))
+            return {'result': 1, 'value': strValue}
         except:
-            strValue=''
-            return {'result':0, 'error':"Select a valid geographical area."}
+            strValue = ''
+            return {'result': 0, 'error': "Select a valid geographical area."}
     else:
-        if (pos1!=-1):
-            strError=strError1;
+        if (pos1 != -1):
+            strError = strError1
         else:
-            if (pos2!=-1):
-                strError=strError2;
-            #else:
+            if (pos2 != -1):
+                strError = strError2
+            # else:
             #   if (pos3!=-1):
             #       strError="Select a valid geographical area.";
-        return {'result':0, 'error':strError}
+        return {'result': 0, 'error': strError}
 
 
 def returnVariableFeature(strVar):
     # read from ini file and return all dataset saved
-    global arrayValues;
+    global arrayValues
     # ================
     # DATASET
     # ================
-    if (strVar==""):
+    if (strVar == ""):
         return ""
-    if (arrayValues==""):
-        arrayValues=returnVariablesList('DATASET');
+    if (arrayValues == ""):
+        arrayValues = returnVariablesList('DATASET')
 
-    arrayDataset=[]
-    #strLegend=''
-    #strSD=''
-    strReturnID=''
-    strReturnLabel='';
+    arrayDataset = []
+    # strLegend=''
+    # strSD=''
+    strReturnID = ''
+    strReturnLabel = ''
     count = 0
-    blnFound=0
-    while (count < len(arrayValues) and blnFound==0):
+    blnFound = 0
+    while (count < len(arrayValues) and blnFound == 0):
 
-        if (arrayValues[count][lngGPosIni_Name]==strVar):
-            blnFound=1
+        if (arrayValues[count][lngGPosIni_Name] == strVar):
+            blnFound = 1
         else:
             count = count + 1
-    strStore=''
-    if (blnFound==1):
+    strStore = ''
+    if (blnFound == 1):
 
-        arrayReturn=arrayValues[count]
+        arrayReturn = arrayValues[count]
         # LAYER NAME
         try:
-            strEnabled=arrayValues[count][lngGPosIni_Enabled]
+            strEnabled = arrayValues[count][lngGPosIni_Enabled]
             pos = arrayValues[count][lngGPosIni_Name].find(":")
             if (pos != -1):
                 arrayTemp = arrayValues[count][lngGPosIni_Name].split(':')
                 # Geoserver configuration
                 # STORE
-                strStore=arrayTemp[0]
+                strStore = arrayTemp[0]
                 # LAYERNAME
-                strLayerName=arrayTemp[1]
+                strLayerName = arrayTemp[1]
             else:
-                strLayerName=arrayValues[count][lngGPosIni_Name]
+                strLayerName = arrayValues[count][lngGPosIni_Name]
 
         except:
-            strEnabled="0"
-            strLayerName='';
-            strStore='';
+            strEnabled = "0"
+            strLayerName = ''
+            strStore = ''
         try:
 
-            if (arrayValues[count][lngGPosIni_ReturnID]!=""):
+            if (arrayValues[count][lngGPosIni_ReturnID] != ""):
                 pos = arrayValues[count][lngGPosIni_ReturnID].find("#")
                 if (pos != -1):
-                    arrayReturnValues = arrayValues[count][lngGPosIni_ReturnID].split('#')
+                    arrayReturnValues = arrayValues[count][
+                        lngGPosIni_ReturnID].split('#')
 
-                    strReturnID=arrayReturnValues[0]
-                    strReturnLabel=arrayReturnValues[1]
+                    strReturnID = arrayReturnValues[0]
+                    strReturnLabel = arrayReturnValues[1]
                 else:
-                    strReturnID=arrayValues[count][lngGPosIni_ReturnID]
-                    strReturnLabel=strReturnID
+                    strReturnID = arrayValues[count][lngGPosIni_ReturnID]
+                    strReturnLabel = strReturnID
 
         except:
-            strReturnID=''
-            strReturnLabel=''
+            strReturnID = ''
+            strReturnLabel = ''
 
     else:
         # ================
@@ -829,39 +854,40 @@ def returnVariableFeature(strVar):
         # ================
 
         # read from ini file and return all ANCILLARY_DATASET saved
-        arrayValues_ancillary=returnVariablesList('ANCILLARY_DATASET');
+        arrayValues_ancillary = returnVariablesList('ANCILLARY_DATASET')
         count = 0
-        blnFound=0
+        blnFound = 0
 
-        while (count < len(arrayValues_ancillary) and blnFound==0):
+        while (count < len(arrayValues_ancillary) and blnFound == 0):
 
-            if (arrayValues_ancillary[count][lngGPosIni_Name]==strVar):
+            if (arrayValues_ancillary[count][lngGPosIni_Name] == strVar):
 
-                blnFound=1
+                blnFound = 1
             else:
                 count = count + 1
-        if (blnFound==1):
-            strEnabled=arrayValues[count][lngGPosIni_Enabled]
-            arrayReturn=arrayValues_ancillary[count]
-            strStore=''
+        if (blnFound == 1):
+            strEnabled = arrayValues[count][lngGPosIni_Enabled]
+            arrayReturn = arrayValues_ancillary[count]
+            strStore = ''
 
             pos = arrayReturn[lngGPosIni_Name].find(":")
             if (pos != -1):
                 arrayTemp = arrayReturn[lngGPosIni_Name].split(':')
-                strStore=arrayTemp[0]
-                strLayerName=arrayTemp[1]
+                strStore = arrayTemp[0]
+                strLayerName = arrayTemp[1]
             else:
-                strLayerName=arrayReturn[lngGPosIni_Name]
+                strLayerName = arrayReturn[lngGPosIni_Name]
 
-            if (len(arrayReturn)>lngGPosIni_ReturnID):
+            if (len(arrayReturn) > lngGPosIni_ReturnID):
                 pos = arrayReturn[lngGPosIni_ReturnID].find("#")
                 if (pos != -1):
-                    arrayReturnValues = arrayReturn[lngGPosIni_ReturnID].split('#')
-                    strReturnID=arrayReturnValues[0]
-                    strReturnLabel=arrayReturnValues[1]
+                    arrayReturnValues = arrayReturn[
+                        lngGPosIni_ReturnID].split('#')
+                    strReturnID = arrayReturnValues[0]
+                    strReturnLabel = arrayReturnValues[1]
                 else:
-                    strReturnID=arrayReturn[lngGPosIni_ReturnID]
-                    strReturnLabel=strReturnID
+                    strReturnID = arrayReturn[lngGPosIni_ReturnID]
+                    strReturnLabel = strReturnID
 
         else:
             # ================
@@ -869,115 +895,115 @@ def returnVariableFeature(strVar):
             # ================
 
             # read from ini file and return all DATASET_SD saved
-            arrayValues_sd=returnVariablesList('DATASET_SD');
+            arrayValues_sd = returnVariablesList('DATASET_SD')
 
             count = 0
-            blnFound=0
+            blnFound = 0
 
-            while (count < len(arrayValues_sd) and blnFound==0):
+            while (count < len(arrayValues_sd) and blnFound == 0):
 
-                if (arrayValues_sd[count][lngGPosIni_Name]==strVar):
-                    blnFound=1
+                if (arrayValues_sd[count][lngGPosIni_Name] == strVar):
+                    blnFound = 1
                 else:
                     count = count + 1
-            if (blnFound==1):
-                strEnabled=arrayValues[count][lngGPosIni_Enabled]
-                arrayReturn=arrayValues_sd[count]
-                strStore=''
+            if (blnFound == 1):
+                strEnabled = arrayValues[count][lngGPosIni_Enabled]
+                arrayReturn = arrayValues_sd[count]
+                strStore = ''
                 pos = arrayReturn[lngGPosIni_Name].find(":")
                 if (pos != -1):
                     arrayTemp = arrayReturn[lngGPosIni_Name].split(':')
-                    strStore=arrayTemp[0]
-                    strLayerName=arrayTemp[1]
+                    strStore = arrayTemp[0]
+                    strLayerName = arrayTemp[1]
                 else:
-                    strLayerName=arrayReturn[lngGPosIni_Name]
-                if (len(arrayReturn)>lngGPosIni_ReturnID):
+                    strLayerName = arrayReturn[lngGPosIni_Name]
+                if (len(arrayReturn) > lngGPosIni_ReturnID):
                     pos = arrayReturn[lngGPosIni_ReturnID].find("#")
                     if (pos != -1):
-                        arrayReturnValues = arrayReturn[lngGPosIni_ReturnID].split('#')
-                        strReturnID=arrayReturnValues[0]
-                        strReturnLabel=arrayReturnValues[1]
+                        arrayReturnValues = arrayReturn[
+                            lngGPosIni_ReturnID].split('#')
+                        strReturnID = arrayReturnValues[0]
+                        strReturnLabel = arrayReturnValues[1]
                     else:
-                        strReturnID=arrayReturn[lngGPosIni_ReturnID]
-                        strReturnLabel=strReturnID
+                        strReturnID = arrayReturn[lngGPosIni_ReturnID]
+                        strReturnLabel = strReturnID
             else:
                 return arrayDataset
-
 
     # save results
     # store name
     arrayDataset = {'store': strStore}
     # color scale
-    if (len(arrayReturn)>lngGPosIni_Colors):
-        arrayDataset['colorsScale']=arrayReturn[lngGPosIni_Colors]
+    if (len(arrayReturn) > lngGPosIni_Colors):
+        arrayDataset['colorsScale'] = arrayReturn[lngGPosIni_Colors]
     # name
 
-    arrayDataset['name']=strLayerName
+    arrayDataset['name'] = strLayerName
     # enabled
 
-    arrayDataset['enabled']=strEnabled
+    arrayDataset['enabled'] = strEnabled
     # id
 
-    arrayDataset['id']=arrayReturn[lngGPosIni_GeoNetID]
+    arrayDataset['id'] = arrayReturn[lngGPosIni_GeoNetID]
     # interval
 
-    arrayDataset['interval']=''
-    if (len(arrayReturn)>lngGPosIni_Interval):
-        arrayDataset['interval']=arrayReturn[lngGPosIni_Interval]
+    arrayDataset['interval'] = ''
+    if (len(arrayReturn) > lngGPosIni_Interval):
+        arrayDataset['interval'] = arrayReturn[lngGPosIni_Interval]
     # type
-    arrayDataset['type']=''
-    if (len(arrayReturn)>lngGPosIni_DataType):
-        arrayDataset['type']=arrayReturn[lngGPosIni_DataType]
+    arrayDataset['type'] = ''
+    if (len(arrayReturn) > lngGPosIni_DataType):
+        arrayDataset['type'] = arrayReturn[lngGPosIni_DataType]
     # formula
-    arrayDataset['formula']=''
-    if (len(arrayReturn)>lngGPosIni_Formula):
-        arrayDataset['formula']=arrayReturn[lngGPosIni_Formula]
+    arrayDataset['formula'] = ''
+    if (len(arrayReturn) > lngGPosIni_Formula):
+        arrayDataset['formula'] = arrayReturn[lngGPosIni_Formula]
     # description
 
-    arrayDataset['description']=''
-    if (len(arrayReturn)>lngGPosIni_Description):
-        arrayDataset['description']=arrayReturn[lngGPosIni_Description]
+    arrayDataset['description'] = ''
+    if (len(arrayReturn) > lngGPosIni_Description):
+        arrayDataset['description'] = arrayReturn[lngGPosIni_Description]
     # fixed interval
-    arrayDataset['fixed']=arrayReturn[lngGPosIni_FixedInterval]
+    arrayDataset['fixed'] = arrayReturn[lngGPosIni_FixedInterval]
     # return id
-    arrayDataset['returnid']=strReturnID
+    arrayDataset['returnid'] = strReturnID
     # return label
-    arrayDataset['returnlabel']=strReturnLabel
+    arrayDataset['returnlabel'] = strReturnLabel
     # legend
-    arrayDataset['legend']=''
+    arrayDataset['legend'] = ''
 
-    if (len(arrayReturn)>lngGPosIni_Legend):
-        arrayDataset['legend']=arrayReturn[lngGPosIni_Legend]
+    if (len(arrayReturn) > lngGPosIni_Legend):
+        arrayDataset['legend'] = arrayReturn[lngGPosIni_Legend]
     # sd
-    arrayDataset['sd']=''
-    if (len(arrayReturn)>lngGPosIni_Sd):
-        arrayDataset['sd']=arrayReturn[lngGPosIni_Sd]
+    arrayDataset['sd'] = ''
+    if (len(arrayReturn) > lngGPosIni_Sd):
+        arrayDataset['sd'] = arrayReturn[lngGPosIni_Sd]
     # shape additional info
-    arrayDataset['shape_dates']="";
-    arrayDataset['shape_values']="";
-    if (len(arrayReturn)>lngGPosIni_ShapeValues):
+    arrayDataset['shape_dates'] = ""
+    arrayDataset['shape_values'] = ""
+    if (len(arrayReturn) > lngGPosIni_ShapeValues):
         pos = arrayReturn[lngGPosIni_ShapeValues].find("#")
 
-        if (pos!=-1):
-            arrayTemp=arrayReturn[lngGPosIni_ShapeValues].split('#')
+        if (pos != -1):
+            arrayTemp = arrayReturn[lngGPosIni_ShapeValues].split('#')
 
-            arrayDataset['shape_values']=arrayTemp[0].split(',')
+            arrayDataset['shape_values'] = arrayTemp[0].split(',')
 
-            if (arrayTemp[1]!=""):
-                arrayDataset['shape_dates']=arrayTemp[1].split(',')
+            if (arrayTemp[1] != ""):
+                arrayDataset['shape_dates'] = arrayTemp[1].split(',')
 
-    arrayDataset['owner']=''
-    if (len(arrayReturn)>lngGPosIni_OwnerGroup):
-        arrayDataset['owner']=arrayReturn[lngGPosIni_OwnerGroup]
-    arrayDataset['subgroup']=''
-    if (len(arrayReturn)>lngGPosIni_OwnerSubGroup):
-        arrayDataset['subgroup']=arrayReturn[lngGPosIni_OwnerSubGroup]
-    arrayDataset['dateFormat']='YYYYMMDD'
-    if (len(arrayReturn)>lngGPosIni_dateFormat):
-        arrayDataset['dateFormat']=arrayReturn[lngGPosIni_dateFormat]
-    arrayDataset['scenario']="";
-    if (len(arrayReturn)>lngGPosIni_Scenario):
-        arrayDataset['scenario']=arrayReturn[lngGPosIni_Scenario]
+    arrayDataset['owner'] = ''
+    if (len(arrayReturn) > lngGPosIni_OwnerGroup):
+        arrayDataset['owner'] = arrayReturn[lngGPosIni_OwnerGroup]
+    arrayDataset['subgroup'] = ''
+    if (len(arrayReturn) > lngGPosIni_OwnerSubGroup):
+        arrayDataset['subgroup'] = arrayReturn[lngGPosIni_OwnerSubGroup]
+    arrayDataset['dateFormat'] = 'YYYYMMDD'
+    if (len(arrayReturn) > lngGPosIni_dateFormat):
+        arrayDataset['dateFormat'] = arrayReturn[lngGPosIni_dateFormat]
+    arrayDataset['scenario'] = ""
+    if (len(arrayReturn) > lngGPosIni_Scenario):
+        arrayDataset['scenario'] = arrayReturn[lngGPosIni_Scenario]
 
     # return array
     return arrayDataset
@@ -988,59 +1014,62 @@ def returnShapeFile_replacekey(strVar):
     Function used to retrieve all info saved into data.ini file for a single dataset
     """
     # return all dataset saved into the configuration file
-    arrayValues=returnVariablesList('DATASET');
-    #strReturnID=''
+    arrayValues = returnVariablesList('DATASET')
+    # strReturnID=''
     count = 0
-    blnFound=0
-    while (count < len(arrayValues) and blnFound==0):
-        if (arrayValues[count][lngGPosIni_Name]==strVar):
-            blnFound=1
+    blnFound = 0
+    while (count < len(arrayValues) and blnFound == 0):
+        if (arrayValues[count][lngGPosIni_Name] == strVar):
+            blnFound = 1
         else:
             count = count + 1
-    if (blnFound==1):
-        #strStore=''
+    if (blnFound == 1):
+        # strStore=''
 
-        strReturn=arrayValues[count][lngGPosIni_FixedInterval]
+        strReturn = arrayValues[count][lngGPosIni_FixedInterval]
         arrayTemp = strReturn.split('_')
 
         return arrayTemp
     else:
-        arrayTemp=[]
-        arrayTemp.append("");
-        return arrayTemp;
+        arrayTemp = []
+        arrayTemp.append("")
+        return arrayTemp
 
 
 def _returnPdfCopyright(lngID):
     """
     Function used to retrieve the copyright in order to save into pdf file.
     """
-    global strGIniSectionPdf;
-    global strGIniPdf_copyrightConf;
-    global strGIniPdf_copyrightText;
-    global strGIniPdf_copyrightReplace;
+    global strGIniSectionPdf
+    global strGIniPdf_copyrightConf
+    global strGIniPdf_copyrightText
+    global strGIniPdf_copyrightReplace
 
     # if read geonetwork
-    strTextGN=_returnCSWText(lngID);
+    strTextGN = _returnCSWText(lngID)
 
     xmldoc = parseString(strTextGN)
     # from ini file
-    strReadFrom=_returnIniValue(strGIniSectionPdf, strGIniPdf_copyrightConf)
-    strText=''
-    if (strReadFrom=="GEONETWORK"):
+    strReadFrom = _returnIniValue(strGIniSectionPdf, strGIniPdf_copyrightConf)
+    strText = ''
+    if (strReadFrom == "GEONETWORK"):
         # read copyright from geonetwork
         try:
 
             slides = xmldoc.getElementsByTagName("gmd:resourceConstraints")
-            strText=slides[0].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue
+            strText = slides[0].childNodes[1].childNodes[
+                1].childNodes[1].childNodes[0].nodeValue
 
         except:
-            #strTag=''
-            strText=''
+            # strTag=''
+            strText = ''
     else:
-        if (strReadFrom=="TEXT"):
+        if (strReadFrom == "TEXT"):
             # read copyright from ini file and replace variables
-            strText=_returnIniValue(strGIniSectionPdf, strGIniPdf_copyrightText)
-            strTextReplace=_returnIniValue(strGIniSectionPdf, strGIniPdf_copyrightReplace)
+            strText = _returnIniValue(
+                strGIniSectionPdf, strGIniPdf_copyrightText)
+            strTextReplace = _returnIniValue(
+                strGIniSectionPdf, strGIniPdf_copyrightReplace)
             arrayTemp = strTextReplace.split(',')
             for strTempValue in arrayTemp:
 
@@ -1051,11 +1080,11 @@ def _returnPdfCopyright(lngID):
                 # <gmd:individualName>
                 # <gco:CharacterString>REMBOLD Felix</gco:CharacterString>
                 # </gmd:individualName>
-                strReplace=slides[0].childNodes[1].childNodes[0].nodeValue
-                strText=strText.replace(arraySingleReplace[0], strReplace);
+                strReplace = slides[0].childNodes[1].childNodes[0].nodeValue
+                strText = strText.replace(arraySingleReplace[0], strReplace)
 
     # return the text
-    return strText;
+    return strText
 
 
 def _returnCSWText(lngID):
@@ -1063,20 +1092,21 @@ def _returnCSWText(lngID):
     Function used to retrieve the geonetwork link in order to load dataset values.
     """
 
-    strOWSCSW=_returnVariableDef("CSW");
+    strOWSCSW = _returnVariableDef("CSW")
 # CSW settings
     global strGCSWService
     global strGCSWVersion
     global strGCSWRequest
     global strGCSWElementNameFull
-    global strGCSWOutputSchema;
+    global strGCSWOutputSchema
 
     # request
-    request = {'request': strGCSWRequest,'service': strGCSWService, 'version': strGCSWVersion, 'elementSetName': strGCSWElementNameFull, 'outputSchema': strGCSWOutputSchema, 'id': lngID}
+    request = {'request': strGCSWRequest, 'service': strGCSWService, 'version': strGCSWVersion,
+               'elementSetName': strGCSWElementNameFull, 'outputSchema': strGCSWOutputSchema, 'id': lngID}
     # exec the request
-    output=_executeURL(strOWSCSW, request, 'Post');
+    output = _executeURL(strOWSCSW, request, 'Post')
     # return the output
-    strText=output.read()
+    strText = output.read()
     return strText
 
 
@@ -1085,32 +1115,31 @@ def returnVariablesList(strType):
     Return array values for each type saved into the configuration file.
     """
 
-    arrayValues=[]
+    arrayValues = []
 
-    if (strType=='DATASET'):
-        strSection='DATASET'
-        strKeyNum='num_dataset'
-        strKeyValue='dataset_'
+    if (strType == 'DATASET'):
+        strSection = 'DATASET'
+        strKeyNum = 'num_dataset'
+        strKeyValue = 'dataset_'
     else:
-        if (strType=='ANCILLARY_DATASET'):
-            strSection='ANCILLARY_DATASET'
-            strKeyNum='num_ancillarydataset'
-            strKeyValue='ancillarydataset_'
+        if (strType == 'ANCILLARY_DATASET'):
+            strSection = 'ANCILLARY_DATASET'
+            strKeyNum = 'num_ancillarydataset'
+            strKeyValue = 'ancillarydataset_'
         else:
-            strSection='DATASET_SD'
-            strKeyNum='num_datasetsd'
-            strKeyValue='datasetsd_'
-
+            strSection = 'DATASET_SD'
+            strKeyNum = 'num_datasetsd'
+            strKeyValue = 'datasetsd_'
 
     config = ConfigParser.ConfigParser()
-    strIniFile=_returnIniFile();
+    strIniFile = _returnIniFile()
     config.read(strIniFile)
 
     lngTemp = config.get(strSection, strKeyNum)
-    arrayTemp = range(1,int(lngTemp)+1,1)
+    arrayTemp = range(1, int(lngTemp) + 1, 1)
     for m in arrayTemp:
-        strVarNum=strKeyValue+str(m);
-        #print strVarNum
+        strVarNum = strKeyValue + str(m)
+        # print strVarNum
         strTemp = config.get(strSection, strVarNum)
         arrayTemp = strTemp.split('<%%>')
         arrayValues.append(arrayTemp)
@@ -1122,100 +1151,102 @@ def is_leap_year(year):
     """
     Function used to check if a year is a leap year.
     """
-    a=int(year)/4
-    b=a*4
-    if (b==year):
-        return 1;
+    a = int(year) / 4
+    b = a * 4
+    if (b == year):
+        return 1
     else:
-        return 0;
+        return 0
 
 
-def returnIfLeapYear(lngDay,lngYear):
+def returnIfLeapYear(lngDay, lngYear):
     """
     Function used to retrieve a date from a DOY.
     """
     #
-    lngDay=int(lngDay);
+    lngDay = int(lngDay)
 
-    lngYear=int(lngYear);
-    strTempDate=date.fromordinal(date(lngYear, 1, 1).toordinal() + lngDay - 1)
-    strTempDate = datetime.strptime(str(strTempDate),"%Y-%m-%d")
-    lngMonth=int(strTempDate.month)
-    blnLeap=is_leap_year(lngYear)
+    lngYear = int(lngYear)
+    strTempDate = date.fromordinal(
+        date(lngYear, 1, 1).toordinal() + lngDay - 1)
+    strTempDate = datetime.strptime(str(strTempDate), "%Y-%m-%d")
+    lngMonth = int(strTempDate.month)
+    blnLeap = is_leap_year(lngYear)
     # if the year is leap
-    if (blnLeap==1):
-        if (lngMonth>=2):
-            if (lngDay>52):
-                lngDay=int(lngDay)+1;
-                strTempDate=date.fromordinal(date(lngYear, 1, 1).toordinal() + lngDay - 1)
-                strTempDate = datetime.strptime(str(strTempDate),"%Y-%m-%d")
+    if (blnLeap == 1):
+        if (lngMonth >= 2):
+            if (lngDay > 52):
+                lngDay = int(lngDay) + 1
+                strTempDate = date.fromordinal(
+                    date(lngYear, 1, 1).toordinal() + lngDay - 1)
+                strTempDate = datetime.strptime(str(strTempDate), "%Y-%m-%d")
     # verify date
-    return strTempDate;
+    return strTempDate
 
 
-def _returnDayConditions(strTemporalType,strTempDates):
+def _returnDayConditions(strTemporalType, strTempDates):
     """
     Function used to retrieve all "days" conditions in order to laods all dates.
     """
 
-    arrayDays=[]
+    arrayDays = []
     if (strTempDates != ""):
         for day in strTempDates:
             arrayDays.append(int(day))
         return arrayDays
 
-    if (strTemporalType=="10d"):
-        lngCont=-1
-        arrayD=[1,11,21]
-        arrayM=range(1,13,1)
+    if (strTemporalType == "10d"):
+        lngCont = -1
+        arrayD = [1, 11, 21]
+        arrayM = range(1, 13, 1)
 
         for m in arrayM:
             for d in arrayD:
                 strDate = date(2011, m, d)
-                a=strDate.timetuple().tm_yday
-                arrayDays.append( a)
+                a = strDate.timetuple().tm_yday
+                arrayDays.append(a)
 
     else:
-        if (strTemporalType=="16d"):
-            lngCont=16
+        if (strTemporalType == "16d"):
+            lngCont = 16
         else:
-            if (strTemporalType=="15d"):
-                lngCont=15
+            if (strTemporalType == "15d"):
+                lngCont = 15
             else:
-                if (strTemporalType=="1d"):
-                    lngCont=1
+                if (strTemporalType == "1d"):
+                    lngCont = 1
                 else:
-                    if (strTemporalType=="1m"):
+                    if (strTemporalType == "1m"):
 
-                        lngCont=-1
-                        arrayDays=[]
-                        arrayM = range(1,13,1)
+                        lngCont = -1
+                        arrayDays = []
+                        arrayM = range(1, 13, 1)
 
                         for m in arrayM:
                             strDate = date(2011, m, 1)
-                            a=strDate.timetuple().tm_yday
+                            a = strDate.timetuple().tm_yday
                             arrayDays.append(a)
 
                     else:
-                        if (strTemporalType=="1y"):
-                            lngCont=365
+                        if (strTemporalType == "1y"):
+                            lngCont = 365
                         else:
-                            if (strTemporalType=="10y"):
-                                lngCont=365
+                            if (strTemporalType == "10y"):
+                                lngCont = 365
                             else:
-                                if (strTemporalType=="10d"):
-                                    lngCont=1
+                                if (strTemporalType == "10d"):
+                                    lngCont = 1
                                 else:
-                                    lngCont=-1
-                                    arrayDays=[1]
+                                    lngCont = -1
+                                    arrayDays = [1]
 
-    if (lngCont!=-1):
-        arrayDays = range(1,366,lngCont)
+    if (lngCont != -1):
+        arrayDays = range(1, 366, lngCont)
 
     return arrayDays
 
 
-#def _returnDayConditions_daily(strTemporalType):
+# def _returnDayConditions_daily(strTemporalType):
 #   lngCont=1
 #   arrayDays = range(1,366,lngCont)
 #
@@ -1228,22 +1259,23 @@ def _readLayerName(strCoverage):
     file all values and return an array with all values.
     """
     arrayTemp = strCoverage.split(':')
-    strStore=arrayTemp[0]
-    arrayCoverage=arrayTemp[1].split('_')
-    strGroup=arrayCoverage[0]
-    strCoverageName=arrayCoverage[1]
-    strID=arrayCoverage[2]
-    strCoverageType=arrayCoverage[3]    #d: dataset, m: mosaic, s:shapefile
-    strCoverageTemporal=""
-    if (len(arrayCoverage)>3):
-        strCoverageTemporal=arrayCoverage[4]
+    strStore = arrayTemp[0]
+    arrayCoverage = arrayTemp[1].split('_')
+    strGroup = arrayCoverage[0]
+    strCoverageName = arrayCoverage[1]
+    strID = arrayCoverage[2]
+    strCoverageType = arrayCoverage[3]  # d: dataset, m: mosaic, s:shapefile
+    strCoverageTemporal = ""
+    if (len(arrayCoverage) > 3):
+        strCoverageTemporal = arrayCoverage[4]
 
-    arrayDataset = {'store': strStore, 'colorsScale': strGroup, 'name': strCoverageName,'id': strID,'interval': strCoverageTemporal,'type': strCoverageType}
+    arrayDataset = {'store': strStore, 'colorsScale': strGroup, 'name': strCoverageName,
+                    'id': strID, 'interval': strCoverageTemporal, 'type': strCoverageType}
 
     return arrayDataset
 
 
-def _returnDatasetAttributes(lngID,strType):
+def _returnDatasetAttributes(lngID, strType):
     """
     Function used to retrieve all info from GN about the dataset.
     """
@@ -1252,558 +1284,632 @@ def _returnDatasetAttributes(lngID,strType):
     global strGCSWVersion
     global strGCSWRequest
     global strGCSWElementName
-    global strGCSWOutputSchema;
+    global strGCSWOutputSchema
 
     # request
     # brief
-    request = {'request': strGCSWRequest,'service': strGCSWService, 'version': strGCSWVersion, 'elementSetName': strGCSWElementName, 'outputSchema': strGCSWOutputSchema, 'id': lngID}
+    request = {'request': strGCSWRequest, 'service': strGCSWService, 'version': strGCSWVersion,
+               'elementSetName': strGCSWElementName, 'outputSchema': strGCSWOutputSchema, 'id': lngID}
 
     # exec the request
-    strOWSCSW=_returnVariableDef("CSW");
+    strOWSCSW = _returnVariableDef("CSW")
 
-    output=_executeURL(strOWSCSW, request, 'Post');
+    output = _executeURL(strOWSCSW, request, 'Post')
 
-    a=output.read()
-    #print a
+    a = output.read()
+    # print a
     try:
 
         # identifier
-        blnPrint=0
+        blnPrint = 0
 
         xmldoc = parseString(a)
 
-        #peakResponse
+        # peakResponse
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:peakResponse")
-            lngBadValues=strGetCap[0].childNodes[1].childNodes[0].nodeValue
+            lngBadValues = strGetCap[0].childNodes[1].childNodes[0].nodeValue
 
         except:
-            lngBadValues=-1
+            lngBadValues = -1
 
         # scaleFactor
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:offset")
-            lngOffset=strGetCap[0].childNodes[1].childNodes[0].nodeValue
+            lngOffset = strGetCap[0].childNodes[1].childNodes[0].nodeValue
 
         except:
-            lngOffset=-1
+            lngOffset = -1
 
-        #minValue
+        # minValue
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:minValue")
-            lngMinValue=strGetCap[0].childNodes[1].childNodes[0].nodeValue
+            lngMinValue = strGetCap[0].childNodes[1].childNodes[0].nodeValue
 
         except:
-            lngMinValue=-1
+            lngMinValue = -1
 
-        #maxValue
+        # maxValue
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:maxValue")
-            lngMaxValue=strGetCap[0].childNodes[1].childNodes[0].nodeValue
+            lngMaxValue = strGetCap[0].childNodes[1].childNodes[0].nodeValue
         except:
-            lngMaxValue=-1
+            lngMaxValue = -1
 
         # scaleFactor
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:scaleFactor")
-            lngScaleFactor=strGetCap[0].childNodes[1].childNodes[0].nodeValue
+            lngScaleFactor = strGetCap[0].childNodes[1].childNodes[0].nodeValue
         except:
-            lngScaleFactor=-1
+            lngScaleFactor = -1
 
         # unit
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:units")
-            strUnit=strGetCap[0].childNodes[1].childNodes[1].childNodes[0].nodeValue
-            #try:
-            strUnit=strUnit.encode('utf-8')
-            strUnit=strUnit.replace( 'Â', "");
-            strUnit=strUnit.replace( '°', "&deg;");
+            strUnit = strGetCap[0].childNodes[
+                1].childNodes[1].childNodes[0].nodeValue
+            # try:
+            strUnit = strUnit.encode('utf-8')
+            strUnit = strUnit.replace('Â', "")
+            strUnit = strUnit.replace('°', "&deg;")
 
         except:
-            strUnit=''
+            strUnit = ''
 
         # dimensionSize
-        lngNumRows=-1
-        lngNumCols=-1
+        lngNumRows = -1
+        lngNumCols = -1
 
         try:
-            strGetCap = xmldoc.getElementsByTagName("gmd:axisDimensionProperties")
-            strTemp = strGetCap[0].childNodes[1].childNodes[1].childNodes[1].attributes["codeListValue"].value
+            strGetCap = xmldoc.getElementsByTagName(
+                "gmd:axisDimensionProperties")
+            strTemp = strGetCap[0].childNodes[1].childNodes[
+                1].childNodes[1].attributes["codeListValue"].value
             if (strTemp == "row"):
-                lngNumRows=float(strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
+                lngNumRows = float(
+                    strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
             else:
                 if (strTemp == "column"):
-                    lngNumCols=float(strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
+                    lngNumCols = float(
+                        strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
         except:
-            lngNumRows=-1
-            lngNumCols=-1
+            lngNumRows = -1
+            lngNumCols = -1
         # dimensionSize
 
         try:
 
-            strGetCap = xmldoc.getElementsByTagName("gmd:axisDimensionProperties")
-            strTemp = strGetCap[1].childNodes[1].childNodes[1].childNodes[1].attributes["codeListValue"].value
+            strGetCap = xmldoc.getElementsByTagName(
+                "gmd:axisDimensionProperties")
+            strTemp = strGetCap[1].childNodes[1].childNodes[
+                1].childNodes[1].attributes["codeListValue"].value
             if (strTemp == "row"):
-                lngNumRows=float(strGetCap[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
+                lngNumRows = float(
+                    strGetCap[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
             else:
                 if (strTemp == "column"):
-                    lngNumCols=float(strGetCap[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
+                    lngNumCols = float(
+                        strGetCap[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)
 
         except:
-            lngNumRows=-1
-            lngNumCols=-1
-
+            lngNumRows = -1
+            lngNumCols = -1
 
         # westBoundLongitude
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:westBoundLongitude")
-            westBoundLongitude=float(strGetCap[0].childNodes[1].childNodes[0].nodeValue)
+            westBoundLongitude = float(
+                strGetCap[0].childNodes[1].childNodes[0].nodeValue)
 
         except:
-            westBoundLongitude=-1
+            westBoundLongitude = -1
         # southBoundLatitude
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:southBoundLatitude")
-            southBoundLatitude=float(strGetCap[0].childNodes[1].childNodes[0].nodeValue)
+            southBoundLatitude = float(
+                strGetCap[0].childNodes[1].childNodes[0].nodeValue)
 
         except:
-            southBoundLatitude=-1
+            southBoundLatitude = -1
         # eastBoundLongitude
         try:
             strGetCap = xmldoc.getElementsByTagName("gmd:eastBoundLongitude")
-            eastBoundLongitude=float(strGetCap[0].childNodes[1].childNodes[0].nodeValue)
+            eastBoundLongitude = float(
+                strGetCap[0].childNodes[1].childNodes[0].nodeValue)
         except:
-            eastBoundLongitude=-1
+            eastBoundLongitude = -1
         try:
             # northBoundLatitude
             strGetCap = xmldoc.getElementsByTagName("gmd:northBoundLatitude")
-            northBoundLatitude=float(strGetCap[0].childNodes[1].childNodes[0].nodeValue)
+            northBoundLatitude = float(
+                strGetCap[0].childNodes[1].childNodes[0].nodeValue)
 
         except:
-            northBoundLatitude=-1
+            northBoundLatitude = -1
         # beginPosition
         try:
             strGetCap = xmldoc.getElementsByTagName("gml:beginPosition")
-            beginPosition=str(strGetCap[0].childNodes[0].nodeValue)
+            beginPosition = str(strGetCap[0].childNodes[0].nodeValue)
 
         except:
-            beginPosition=-1
+            beginPosition = -1
         # endPosition
 
         try:
             strGetCap = xmldoc.getElementsByTagName("gml:endPosition")
-            endPosition=str(strGetCap[0].childNodes[0].nodeValue)
+            endPosition = str(strGetCap[0].childNodes[0].nodeValue)
         except:
-            endPosition=-1
+            endPosition = -1
         # endPosition
-        strLink="";
-        strGetCapabilities="";
-        strGetWMS="";
-        strGetWCS="";
-        strGetWCSVersion=""
+        strLink = ""
+        strGetCapabilities = ""
+        strGetWMS = ""
+        strGetWCS = ""
+        strGetWCSVersion = ""
         try:
 
+            strGetCap = xmldoc.getElementsByTagName(
+                "gmd:MD_DigitalTransferOptions")
+            strItem = strGetCap[0]
 
-            strGetCap = xmldoc.getElementsByTagName("gmd:MD_DigitalTransferOptions")
-            strItem=strGetCap[0]
+            strTemp = strItem.childNodes[1].childNodes[1].childNodes[
+                7].childNodes[1].childNodes[0].nodeValue
 
-            strTemp = strItem.childNodes[1].childNodes[1].childNodes[7].childNodes[1].childNodes[0].nodeValue
-
-            if (strTemp=="Online link"):
-                strLink=str(strItem.childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
+            if (strTemp == "Online link"):
+                strLink = str(strItem.childNodes[1].childNodes[1].childNodes[
+                              1].childNodes[1].childNodes[0].nodeValue)
             else:
-                if (strTemp=="Get Capabilities"):
-                    strGetCapabilities=str(strItem.childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                    strTemp = strItem.childNodes[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                if (strTemp == "Get Capabilities"):
+                    strGetCapabilities = str(strItem.childNodes[1].childNodes[1].childNodes[
+                                             1].childNodes[1].childNodes[0].nodeValue)
+                    strTemp = strItem.childNodes[1].childNodes[1].childNodes[
+                        3].childNodes[1].childNodes[0].nodeValue
                     arrayTemp = strTemp.split('-')
-                    strGetWMSVersion=arrayTemp[1]
+                    strGetWMSVersion = arrayTemp[1]
                     pos = strGetCapabilities.find("?")
-                    strGetWMS=strGetCapabilities[0:pos]
+                    strGetWMS = strGetCapabilities[0:pos]
 
                 else:
-                    if (strTemp=="Web Coverage Service"):
-                        strGetWCS=str(strItem.childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                        strTemp = strItem.childNodes[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                    if (strTemp == "Web Coverage Service"):
+                        strGetWCS = str(strItem.childNodes[1].childNodes[1].childNodes[
+                                        1].childNodes[1].childNodes[0].nodeValue)
+                        strTemp = strItem.childNodes[1].childNodes[1].childNodes[
+                            3].childNodes[1].childNodes[0].nodeValue
                         arrayTemp = strTemp.split('-')
-                        strGetWCSVersion=arrayTemp[1]
-                    #else:
+                        strGetWCSVersion = arrayTemp[1]
+                    # else:
                     #   if (strTemp=="View Map"):
                     #       strGetWMS=str(strItem.childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
                     #       strTemp = strItem.childNodes[1].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
                     #       arrayTemp = strTemp.split('-')
                     #       strGetWMSVersion=arrayTemp[1]
 
-            if (len(strItem.childNodes)>3):
-                strTemp = strItem.childNodes[3].childNodes[1].childNodes[7].childNodes[1].childNodes[0].nodeValue
+            if (len(strItem.childNodes) > 3):
+                strTemp = strItem.childNodes[3].childNodes[1].childNodes[
+                    7].childNodes[1].childNodes[0].nodeValue
 
-                if (strTemp=="Online link"):
-                    strLink=str(strItem.childNodes[3].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
+                if (strTemp == "Online link"):
+                    strLink = str(strItem.childNodes[3].childNodes[1].childNodes[
+                                  1].childNodes[1].childNodes[0].nodeValue)
                 else:
-                    if (strTemp=="Get Capabilities"):
-                        strGetCapabilities=str(strItem.childNodes[3].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                        strTemp = strItem.childNodes[3].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                    if (strTemp == "Get Capabilities"):
+                        strGetCapabilities = str(strItem.childNodes[3].childNodes[1].childNodes[
+                                                 1].childNodes[1].childNodes[0].nodeValue)
+                        strTemp = strItem.childNodes[3].childNodes[1].childNodes[
+                            3].childNodes[1].childNodes[0].nodeValue
                         arrayTemp = strTemp.split('-')
-                        if (len(arrayTemp)>1):
-                            strGetWMSVersion=arrayTemp[1]
+                        if (len(arrayTemp) > 1):
+                            strGetWMSVersion = arrayTemp[1]
                         pos = strGetCapabilities.find("?")
-                        if (pos!=-1):
-                            strGetWMS=strGetCapabilities[0:pos]
+                        if (pos != -1):
+                            strGetWMS = strGetCapabilities[0:pos]
 
                     else:
-                        if (strTemp=="Web Coverage Service"):
-                            strGetWCS=str(strItem.childNodes[3].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                            strTemp = strItem.childNodes[3].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                        if (strTemp == "Web Coverage Service"):
+                            strGetWCS = str(strItem.childNodes[3].childNodes[1].childNodes[
+                                            1].childNodes[1].childNodes[0].nodeValue)
+                            strTemp = strItem.childNodes[3].childNodes[1].childNodes[
+                                3].childNodes[1].childNodes[0].nodeValue
                             arrayTemp = strTemp.split('-')
-                            if (len(arrayTemp)>1):
-                                strGetWCSVersion=arrayTemp[1]
-                        #else:
+                            if (len(arrayTemp) > 1):
+                                strGetWCSVersion = arrayTemp[1]
+                        # else:
                         #   if (strTemp=="View Map"):
                         #       strGetWMS=str(strItem.childNodes[3].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
                         #       strTemp = strItem.childNodes[3].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
                         #       arrayTemp = strTemp.split('-')
                         #       strGetWMSVersion=arrayTemp[1]
 
-            if (len(strItem.childNodes)>5):
-                strTemp = strItem.childNodes[5].childNodes[1].childNodes[7].childNodes[1].childNodes[0].nodeValue
+            if (len(strItem.childNodes) > 5):
+                strTemp = strItem.childNodes[5].childNodes[1].childNodes[
+                    7].childNodes[1].childNodes[0].nodeValue
 
-                if (strTemp=="Online link"):
-                    strLink=str(strItem.childNodes[5].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
+                if (strTemp == "Online link"):
+                    strLink = str(strItem.childNodes[5].childNodes[1].childNodes[
+                                  1].childNodes[1].childNodes[0].nodeValue)
                 else:
-                    if (strTemp=="Get Capabilities"):
-                        strGetCapabilities=str(strItem.childNodes[5].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                        strTemp = strItem.childNodes[5].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                    if (strTemp == "Get Capabilities"):
+                        strGetCapabilities = str(strItem.childNodes[5].childNodes[1].childNodes[
+                                                 1].childNodes[1].childNodes[0].nodeValue)
+                        strTemp = strItem.childNodes[5].childNodes[1].childNodes[
+                            3].childNodes[1].childNodes[0].nodeValue
                         arrayTemp = strTemp.split('-')
-                        if (len(arrayTemp)>1):
-                            strGetWMSVersion=arrayTemp[1]
+                        if (len(arrayTemp) > 1):
+                            strGetWMSVersion = arrayTemp[1]
                         pos = strGetCapabilities.find("?")
-                        if (pos!=-1):
-                            strGetWMS=strGetCapabilities[0:pos]
+                        if (pos != -1):
+                            strGetWMS = strGetCapabilities[0:pos]
 
                     else:
-                        if (strTemp=="Web Coverage Service"):
-                            strGetWCS=str(strItem.childNodes[5].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                            strTemp = strItem.childNodes[5].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                        if (strTemp == "Web Coverage Service"):
+                            strGetWCS = str(strItem.childNodes[5].childNodes[1].childNodes[
+                                            1].childNodes[1].childNodes[0].nodeValue)
+                            strTemp = strItem.childNodes[5].childNodes[1].childNodes[
+                                3].childNodes[1].childNodes[0].nodeValue
                             arrayTemp = strTemp.split('-')
-                            if (len(arrayTemp)>1):
-                                strGetWCSVersion=arrayTemp[1]
+                            if (len(arrayTemp) > 1):
+                                strGetWCSVersion = arrayTemp[1]
 
+            if (len(strItem.childNodes) > 7):
+                strTemp = strItem.childNodes[7].childNodes[1].childNodes[
+                    7].childNodes[1].childNodes[0].nodeValue
 
-            if (len(strItem.childNodes)>7):
-                strTemp = strItem.childNodes[7].childNodes[1].childNodes[7].childNodes[1].childNodes[0].nodeValue
-
-                if (strTemp=="Online link"):
-                    strLink=str(strItem.childNodes[7].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
+                if (strTemp == "Online link"):
+                    strLink = str(strItem.childNodes[7].childNodes[1].childNodes[
+                                  1].childNodes[1].childNodes[0].nodeValue)
                 else:
-                    if (strTemp=="Get Capabilities"):
-                        strGetCapabilities=str(strItem.childNodes[7].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                        strTemp = strItem.childNodes[7].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                    if (strTemp == "Get Capabilities"):
+                        strGetCapabilities = str(strItem.childNodes[7].childNodes[1].childNodes[
+                                                 1].childNodes[1].childNodes[0].nodeValue)
+                        strTemp = strItem.childNodes[7].childNodes[1].childNodes[
+                            3].childNodes[1].childNodes[0].nodeValue
                         arrayTemp = strTemp.split('-')
-                        if (len(arrayTemp)>1):
-                            strGetWMSVersion=arrayTemp[1]
+                        if (len(arrayTemp) > 1):
+                            strGetWMSVersion = arrayTemp[1]
                         pos = strGetCapabilities.find("?")
-                        if (pos!=-1):
-                            strGetWMS=strGetCapabilities[0:pos]
+                        if (pos != -1):
+                            strGetWMS = strGetCapabilities[0:pos]
                     else:
-                        if (strTemp=="Web Coverage Service"):
-                            strGetWCS=str(strItem.childNodes[7].childNodes[1].childNodes[1].childNodes[1].childNodes[0].nodeValue)
-                            strTemp = strItem.childNodes[7].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue
+                        if (strTemp == "Web Coverage Service"):
+                            strGetWCS = str(strItem.childNodes[7].childNodes[1].childNodes[
+                                            1].childNodes[1].childNodes[0].nodeValue)
+                            strTemp = strItem.childNodes[7].childNodes[1].childNodes[
+                                3].childNodes[1].childNodes[0].nodeValue
                             arrayTemp = strTemp.split('-')
-                            if (len(arrayTemp)>1):
-                                strGetWCSVersion=arrayTemp[1]
+                            if (len(arrayTemp) > 1):
+                                strGetWCSVersion = arrayTemp[1]
 
         except:
 
-            strLink=''
-            strGetCapabilities=''
-            strGetWMS=''
-            strGetWCS=''
-            strGetWMSVersion=''
-            strGetWCSVersion=''
+            strLink = ''
+            strGetCapabilities = ''
+            strGetWMS = ''
+            strGetWCS = ''
+            strGetWMSVersion = ''
+            strGetWCSVersion = ''
         # epsg
         try:
-            strGetCap = xmldoc.getElementsByTagName("gmd:referenceSystemIdentifier")
-            strCRS=str(strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[0].nodeValue)+":"+str(strGetCap[0].childNodes[1].childNodes[5].childNodes[1].childNodes[0].nodeValue)
+            strGetCap = xmldoc.getElementsByTagName(
+                "gmd:referenceSystemIdentifier")
+            strCRS = str(strGetCap[0].childNodes[1].childNodes[3].childNodes[1].childNodes[
+                         0].nodeValue) + ":" + str(strGetCap[0].childNodes[1].childNodes[5].childNodes[1].childNodes[0].nodeValue)
         except:
-            strCRS=''
-            #endPosition=''
-        if (strGetWCS==""):
-            strGetWCS=strGetCapabilities
+            strCRS = ''
+            # endPosition=''
+        if (strGetWCS == ""):
+            strGetWCS = strGetCapabilities
 
-        if (strGetWCSVersion==""):
-            #strGetWCSVersion=strGetWMSVersion
+        if (strGetWCSVersion == ""):
+            # strGetWCSVersion=strGetWMSVersion
             global strGWCSVersion
-            strGetWCSVersion=strGWCSVersion
+            strGetWCSVersion = strGWCSVersion
 
-        blnPrint=0
-        #print a
-        if (blnPrint == 1): print "beginPosition: "+str(beginPosition)
-        if (blnPrint == 1): print "endPosition: "+str(endPosition)
-        if (blnPrint == 1): print "strLink: "+str(strLink)
-        if (blnPrint == 1): print "strGetCapabilities: "+str(strGetCapabilities)
-        if (blnPrint == 1): print "strGetWMS: "+str(strGetWMS)
-        if (blnPrint == 1): print "strGetWMS version: "+str(strGetWMSVersion)
-        if (blnPrint == 1): print "strGetWCS: "+str(strGetWCS)
-        if (blnPrint == 1): print "strGetWCS version: "+str(strGetWCSVersion)
-        if (blnPrint == 1): print "strCRS: "+str(strCRS)
-        if (blnPrint == 1): print "westBoundLongitude: "+str(westBoundLongitude)
-        if (blnPrint == 1): print "southBoundLatitude: "+str(southBoundLatitude)
-        if (blnPrint == 1): print "eastBoundLongitude: "+str(eastBoundLongitude)
-        if (blnPrint == 1): print "northBoundLatitude: "+str(northBoundLatitude)
-        if (blnPrint == 1): print "units: "+str(strUnit)
-        if (blnPrint == 1): print "rows: "+str(lngNumRows)
-        if (blnPrint == 1): print "cols: "+str(lngNumCols)
-        if (blnPrint == 1): print "offset: "+str(lngOffset)
-        if (blnPrint == 1): print "bad values: "+str(lngBadValues)
-        if (blnPrint == 1): print "maxValue: "+str(lngMaxValue)
-        if (blnPrint == 1): print "minValue: "+str(lngMinValue)
-        if (blnPrint == 1): print "scale factor: "+str(lngScaleFactor)
+        blnPrint = 0
+        # print a
+        if (blnPrint == 1):
+            print "beginPosition: " + str(beginPosition)
+        if (blnPrint == 1):
+            print "endPosition: " + str(endPosition)
+        if (blnPrint == 1):
+            print "strLink: " + str(strLink)
+        if (blnPrint == 1):
+            print "strGetCapabilities: " + str(strGetCapabilities)
+        if (blnPrint == 1):
+            print "strGetWMS: " + str(strGetWMS)
+        if (blnPrint == 1):
+            print "strGetWMS version: " + str(strGetWMSVersion)
+        if (blnPrint == 1):
+            print "strGetWCS: " + str(strGetWCS)
+        if (blnPrint == 1):
+            print "strGetWCS version: " + str(strGetWCSVersion)
+        if (blnPrint == 1):
+            print "strCRS: " + str(strCRS)
+        if (blnPrint == 1):
+            print "westBoundLongitude: " + str(westBoundLongitude)
+        if (blnPrint == 1):
+            print "southBoundLatitude: " + str(southBoundLatitude)
+        if (blnPrint == 1):
+            print "eastBoundLongitude: " + str(eastBoundLongitude)
+        if (blnPrint == 1):
+            print "northBoundLatitude: " + str(northBoundLatitude)
+        if (blnPrint == 1):
+            print "units: " + str(strUnit)
+        if (blnPrint == 1):
+            print "rows: " + str(lngNumRows)
+        if (blnPrint == 1):
+            print "cols: " + str(lngNumCols)
+        if (blnPrint == 1):
+            print "offset: " + str(lngOffset)
+        if (blnPrint == 1):
+            print "bad values: " + str(lngBadValues)
+        if (blnPrint == 1):
+            print "maxValue: " + str(lngMaxValue)
+        if (blnPrint == 1):
+            print "minValue: " + str(lngMinValue)
+        if (blnPrint == 1):
+            print "scale factor: " + str(lngScaleFactor)
 
-        #exit(0);
+        # exit(0);
 
         # -9999 not set
         datasetAttributes = {'peakResponse': lngBadValues}
-        datasetAttributes['scaleFactor']= lngScaleFactor
-        datasetAttributes['offset']= lngOffset
-        datasetAttributes['numRows']= lngNumRows
-        datasetAttributes['numCols']= lngNumCols
+        datasetAttributes['scaleFactor'] = lngScaleFactor
+        datasetAttributes['offset'] = lngOffset
+        datasetAttributes['numRows'] = lngNumRows
+        datasetAttributes['numCols'] = lngNumCols
 
-        datasetAttributes['westBoundLongitude']= westBoundLongitude
-        datasetAttributes['southBoundLatitude']= southBoundLatitude
-        datasetAttributes['eastBoundLongitude']= eastBoundLongitude
-        datasetAttributes['northBoundLatitude']= northBoundLatitude
+        datasetAttributes['westBoundLongitude'] = westBoundLongitude
+        datasetAttributes['southBoundLatitude'] = southBoundLatitude
+        datasetAttributes['eastBoundLongitude'] = eastBoundLongitude
+        datasetAttributes['northBoundLatitude'] = northBoundLatitude
 
-        datasetAttributes['minValue']=lngMinValue
-        datasetAttributes['maxValue']=lngMaxValue
+        datasetAttributes['minValue'] = lngMinValue
+        datasetAttributes['maxValue'] = lngMaxValue
 
-        if (strUnit==None):
-            strUnit='';
-        datasetAttributes['unit']=strUnit
+        if (strUnit == None):
+            strUnit = ''
+        datasetAttributes['unit'] = strUnit
 
-        datasetAttributes['crs']= strCRS
-        xsize=-1
-        if (lngNumCols!=-1):
-            xsize=abs(float(eastBoundLongitude)-float(westBoundLongitude))/float(lngNumCols)#0.016299137
-        ysize=-1
-        if (lngNumRows!=-1):
-            ysize=abs(float(northBoundLatitude)-float(southBoundLatitude))/float(lngNumRows)#0.016299137
-        datasetAttributes['xsize']= float(xsize)
-        datasetAttributes['ysize']= float(ysize)
-        datasetAttributes['externalLink']= strLink
+        datasetAttributes['crs'] = strCRS
+        xsize = -1
+        if (lngNumCols != -1):
+            # 0.016299137
+            xsize = abs(
+                float(eastBoundLongitude) - float(westBoundLongitude)) / float(lngNumCols)
+        ysize = -1
+        if (lngNumRows != -1):
+            # 0.016299137
+            ysize = abs(
+                float(northBoundLatitude) - float(southBoundLatitude)) / float(lngNumRows)
+        datasetAttributes['xsize'] = float(xsize)
+        datasetAttributes['ysize'] = float(ysize)
+        datasetAttributes['externalLink'] = strLink
 
         pos = strGetCapabilities.find("geoserver")
-        if (pos==-1):
-        # MAPSERVER
-            strGetCapabilities=strGetCapabilities
-            datasetAttributes['serverType']="MAPSERVER"
+        if (pos == -1):
+            # MAPSERVER
+            strGetCapabilities = strGetCapabilities
+            datasetAttributes['serverType'] = "MAPSERVER"
         else:
-            datasetAttributes['serverType']="GEOSERVER"
+            datasetAttributes['serverType'] = "GEOSERVER"
             pos = strGetCapabilities.find("?")
-            if (pos!=-1):
-                strGetCapabilities=strGetCapabilities[0:pos]
+            if (pos != -1):
+                strGetCapabilities = strGetCapabilities[0:pos]
         pos = strGetWCS.find("geoserver")
-        if (pos==-1):
-        # MAPSERVER
-            strGetWCS=strGetWCS
-            datasetAttributes['serverType']="MAPSERVER"
+        if (pos == -1):
+            # MAPSERVER
+            strGetWCS = strGetWCS
+            datasetAttributes['serverType'] = "MAPSERVER"
         else:
-            datasetAttributes['serverType']="GEOSERVER"
+            datasetAttributes['serverType'] = "GEOSERVER"
             pos = strGetWCS.find("?")
-            if (pos!=-1):
-                strGetWCS=strGetWCS[0:pos]
+            if (pos != -1):
+                strGetWCS = strGetWCS[0:pos]
 
-        datasetAttributes['fromDate']=''
-        datasetAttributes['ows']= strGetCapabilities
-        datasetAttributes['wcs']= strGetWCS
+        datasetAttributes['fromDate'] = ''
+        datasetAttributes['ows'] = strGetCapabilities
+        datasetAttributes['wcs'] = strGetWCS
 
         # version of WMS
-        #strGetOwsVersion=''
+        # strGetOwsVersion=''
         #pos = strGetWMSVersion.find("OGC:WMS-")
-        #if (pos!=-1):
+        # if (pos!=-1):
         #   strGetWMSVersion=strGetWMSVersion[pos+len("OGC:WMS-"):]
         #   pos = strGetWMSVersion.find("-http-get-capabilities")
         #   strGetOwsVersion=strGetWMSVersion[:pos]
 
-        datasetAttributes['ows_version']= strGetWMSVersion
-        datasetAttributes['wcs_version']= strGetWCSVersion
+        datasetAttributes['ows_version'] = strGetWMSVersion
+        datasetAttributes['wcs_version'] = strGetWCSVersion
 
         if (beginPosition != -1):
-            date_object = datetime.strptime(str(beginPosition)[:10], '%Y-%m-%d')
-            datasetAttributes['fromDate']= date_object
+            date_object = datetime.strptime(
+                str(beginPosition)[:10], '%Y-%m-%d')
+            datasetAttributes['fromDate'] = date_object
 
-        datasetAttributes['toDate']=''
+        datasetAttributes['toDate'] = ''
         if (endPosition != -1):
             #dt = datetime.strptime("21/11/06 16:30", "%d/%m/%y %H:%M")
             date_object = datetime.strptime(str(endPosition)[:10], '%Y-%m-%d')
-            datasetAttributes['toDate']= date_object
-        #print datasetAttributes
+            datasetAttributes['toDate'] = date_object
+        # print datasetAttributes
         return datasetAttributes
     except:
-        return "";
+        return ""
 
 
 def _returnMetadataAdditionalInfo(lngID):
-    strReturn=""
-    arrayMetadata=_returnReadDatasetAttributes(lngID,["title","abstract","individualName","organisationName","positionName","electronicMailAddress"]);
+    strReturn = ""
+    arrayMetadata = _returnReadDatasetAttributes(
+        lngID, ["title", "abstract", "individualName", "organisationName", "positionName", "electronicMailAddress"])
 
-    if (arrayMetadata["title"]!=""):
-        strReturn+="\nTitle: "+arrayMetadata["title"]
+    if (arrayMetadata["title"] != ""):
+        strReturn += "\nTitle: " + arrayMetadata["title"]
 
-    if (arrayMetadata["individualName"]!=""):
-        strReturn+="\nContact: "+arrayMetadata["individualName"]+'\n'
+    if (arrayMetadata["individualName"] != ""):
+        strReturn += "\nContact: " + arrayMetadata["individualName"] + '\n'
 
-        if (arrayMetadata["organisationName"]!=""):
-            strReturn+="Organization: "+arrayMetadata["organisationName"]+'\n'
-        if (arrayMetadata["positionName"]!=""):
-            strReturn+="Position: "+arrayMetadata["positionName"]+'\n'
-        if (arrayMetadata["electronicMailAddress"]!=""):
-            strReturn+="Mail: "+arrayMetadata["electronicMailAddress"]+'\n'
-    if (arrayMetadata["abstract"]!=""):
-        strReturn+="\nAbstract: "+arrayMetadata["abstract"]
+        if (arrayMetadata["organisationName"] != ""):
+            strReturn += "Organization: " + \
+                arrayMetadata["organisationName"] + '\n'
+        if (arrayMetadata["positionName"] != ""):
+            strReturn += "Position: " + arrayMetadata["positionName"] + '\n'
+        if (arrayMetadata["electronicMailAddress"] != ""):
+            strReturn += "Mail: " + \
+                arrayMetadata["electronicMailAddress"] + '\n'
+    if (arrayMetadata["abstract"] != ""):
+        strReturn += "\nAbstract: " + arrayMetadata["abstract"]
 
     return strReturn
 
 
-def _returnReadDatasetAttributes(lngID,arrayAttributeName):
+def _returnReadDatasetAttributes(lngID, arrayAttributeName):
     """
     Function used to retrieve all info from GN about the dataset.
     """
 
-    strTextGN=_returnCSWText(lngID);
+    strTextGN = _returnCSWText(lngID)
 
     xmldoc = parseString(strTextGN)
-    #print strTextGN
-    arrayResults={}
+    # print strTextGN
+    arrayResults = {}
     # from ini file
     for strValue in arrayAttributeName:
-        slides = xmldoc.getElementsByTagName("gmd:"+strValue)
+        slides = xmldoc.getElementsByTagName("gmd:" + strValue)
         try:
-            strText=slides[0].childNodes[1].childNodes[0].nodeValue
+            strText = slides[0].childNodes[1].childNodes[0].nodeValue
         except:
-            strText=""
-        arrayResults[strValue]=strText
+            strText = ""
+        arrayResults[strValue] = strText
 
-    return arrayResults;
+    return arrayResults
 
 
-def _returnLegendString(arrayFName,arrayVDataset,strLayerDate):
+def _returnLegendString(arrayFName, arrayVDataset, strLayerDate):
     """
     Function used to retrieve the http request in order to load a legend image
     for a specific dataset if the image is not indicate into the configuration file
     """
 
-    if (arrayFName["legend"]==""):
-        strAdd='&'
+    if (arrayFName["legend"] == ""):
+        strAdd = '&'
 
         pos = arrayVDataset["ows"].find("?")
-        if (pos==-1):
-            strAdd='?'
-        strTemp=strLayerDate
-        if (arrayFName["type"]=="r_d"):
-            strTemp=arrayFName["name"].replace("YYYYMMDD", strLayerDate);
+        if (pos == -1):
+            strAdd = '?'
+        strTemp = strLayerDate
+        if (arrayFName["type"] == "r_d"):
+            strTemp = arrayFName["name"].replace("YYYYMMDD", strLayerDate)
         else:
-            if (arrayFName["type"]=="s_m"):
-                strTemp=arrayFName["name"].replace("REPLACEKEY", strLayerDate);
+            if (arrayFName["type"] == "s_m"):
+                strTemp = arrayFName["name"].replace(
+                    "REPLACEKEY", strLayerDate)
             else:
-                if (arrayFName["type"]=="s_d"):
-                    strTemp=arrayFName["name"]
+                if (arrayFName["type"] == "s_d"):
+                    strTemp = arrayFName["name"]
                 else:
-                    if (arrayFName["type"]=="r_m"):
-                        if (arrayVDataset["serverType"]=="GEOSERVER"):
-                            strTemp=arrayFName["store"]+':'+arrayFName["name"]
+                    if (arrayFName["type"] == "r_m"):
+                        if (arrayVDataset["serverType"] == "GEOSERVER"):
+                            strTemp = arrayFName[
+                                "store"] + ':' + arrayFName["name"]
                         else:
-                            strTemp=arrayFName["name"]
+                            strTemp = arrayFName["name"]
 
 
 # WCS settings
-        global strGWMSService;
-        global strGWMSRequestLegend;
-        strReturn=arrayVDataset["ows"]+strAdd+"SERVICE="+strGWMSService+"&LAYER="+strTemp+"&FORMAT=image/png&TRANSPARENT=true&REQUEST="+strGWMSRequestLegend+"&STYLES=&SRS="+arrayVDataset["crs"]+"&VERSION="+arrayVDataset["ows_version"];
+        global strGWMSService
+        global strGWMSRequestLegend
+        strReturn = arrayVDataset["ows"] + strAdd + "SERVICE=" + strGWMSService + "&LAYER=" + strTemp + "&FORMAT=image/png&TRANSPARENT=true&REQUEST=" + \
+            strGWMSRequestLegend + "&STYLES=&SRS=" + \
+            arrayVDataset["crs"] + "&VERSION=" + arrayVDataset["ows_version"]
         return strReturn
     else:
-        return arrayFName["legend"];
+        return arrayFName["legend"]
 
 
-def returnCoverageMeanValue(strOperation,strDate,arrayParams,arrayFName,arrayVDataset,lngDatasetValue,blnSD):
+def returnCoverageMeanValue(strOperation, strDate, arrayParams, arrayFName, arrayVDataset, lngDatasetValue, blnSD):
     """
     Function called to do a WCS request for a POINT or a BOX.
     """
     # get coverage
-    data=[]
+    data = []
 
-    data=_getCoverage(strDate,arrayParams,arrayFName,arrayVDataset)
+    data = _getCoverage(strDate, arrayParams, arrayFName, arrayVDataset)
 
-    return data;
+    return data
 
 
-def returnCropCoverageMeanValue(strOperation,strDate,arrayParams,arrayFName,arrayVDataset, lngDatasetValue,blnSD):
+def returnCropCoverageMeanValue(strOperation, strDate, arrayParams, arrayFName, arrayVDataset, lngDatasetValue, blnSD):
     """
     Function called to do a WPS for a SHAPE.
     """
     # looking for coverage
-    data=[]
+    data = []
     # crop coverage
-    data=_getCropCoverageFromGeometry(strDate,arrayParams,arrayFName,arrayVDataset)
-    return data;
+    data = _getCropCoverageFromGeometry(
+        strDate, arrayParams, arrayFName, arrayVDataset)
+    return data
 
 
-def _replaceDateFormat(strTempDate,strFormat):
+def _replaceDateFormat(strTempDate, strFormat):
     """
     Function used to replace the date from a format to another one
     """
-    if (strFormat=="YYYY-MM"):
+    if (strFormat == "YYYY-MM"):
         arrayDatesFT = str(strTempDate)[0:10].split('-')
-        strTempDate=str(arrayDatesFT[0])+'-'+arrayDatesFT[1]
+        strTempDate = str(arrayDatesFT[0]) + '-' + arrayDatesFT[1]
         return strTempDate
     else:
-        return strTempDate;
+        return strTempDate
 
 
-def _verifyIfDateIsAvailable(strDate,strLayer,strDataType,arrayDates,strFixed,strFormat):
+def _verifyIfDateIsAvailable(strDate, strLayer, strDataType, arrayDates, strFixed, strFormat):
     """
     Function used to verify if a specific date is available for a dataset.
     """
-    blnDebug=0
-    #print strFormat
-    if (strFormat=="YYYY-MM"):
+    blnDebug = 0
+    # print strFormat
+    if (strFormat == "YYYY-MM"):
         if (arrayDates):
             if strDate in arrayDates:
-                if (blnDebug==1):
+                if (blnDebug == 1):
                     print "YES"
                 return 1
     else:
         # DEFAULT FOrmat
 
-        if (strDataType=="r_m"):
-            timezone_string = strDate.strftime('%z')[0:3] + "." + strDate.strftime('%z')[3:6]
-            if (timezone_string=="."):
-                timezone_string=".000Z";
+        if (strDataType == "r_m"):
+            timezone_string = strDate.strftime(
+                '%z')[0:3] + "." + strDate.strftime('%z')[3:6]
+            if (timezone_string == "."):
+                timezone_string = ".000Z"
 
-            strLook= str(strDate.strftime('%Y-%m-%dT%H:%M:%S'))+str(timezone_string)
+            strLook = str(
+                strDate.strftime('%Y-%m-%dT%H:%M:%S')) + str(timezone_string)
         else:
             pos = strFixed.find("_")
-            if (pos==4):
-                strTempDate=str(strDate)[0:pos]
+            if (pos == 4):
+                strTempDate = str(strDate)[0:pos]
             else:
-                strTempDate=str(strDate)[0:10]
-                strTempDate=strTempDate.replace("-", "");
+                strTempDate = str(strDate)[0:10]
+                strTempDate = strTempDate.replace("-", "")
 
             pos = strLayer.find("REPLACEKEY")
-            if (pos!=-1):
-                strLook=strLayer.replace("REPLACEKEY", strTempDate);
+            if (pos != -1):
+                strLook = strLayer.replace("REPLACEKEY", strTempDate)
             else:
-                strLook=strLayer.replace("YYYYMMDD", strTempDate);
+                strLook = strLayer.replace("YYYYMMDD", strTempDate)
 
-        if (blnDebug==1):
+        if (blnDebug == 1):
             print strLook
             print arrayDates
         if (arrayDates):
             if strLook in arrayDates:
-                if (blnDebug==1):
+                if (blnDebug == 1):
                     print "YES"
 
                 return 1
 
-    return 0;
+    return 0
 
 
 def _returnGetCapabilities_dates(strHttp, strType, strStoreName, strLayername,
@@ -1811,56 +1917,54 @@ def _returnGetCapabilities_dates(strHttp, strType, strStoreName, strLayername,
     """
     Function used to retrieve all dates from the getCapabilities string.
     """
-    arrayDates=[]
+    arrayDates = []
     try:
 
+        # getCapabilities text
+        # print strHttp
+        # print strVersion
+        # strVersion="1.3.0"
 
-        #getCapabilities text
-        #print strHttp
-        #print strVersion
-        #strVersion="1.3.0"
-
-        strGGetCap=_returnGetCapabilities_text(strHttp,strVersion);
-        #print strGGetCap
-        #exit(0);
+        strGGetCap = _returnGetCapabilities_text(strHttp, strVersion)
+        # print strGGetCap
+        # exit(0);
         # found the position of layername
         pos = strGGetCap.find(strLayername)
 
-        if (strStoreName!=""):
-            strLayername=strStoreName+':'+strLayername;
+        if (strStoreName != ""):
+            strLayername = strStoreName + ':' + strLayername
 
-
-        if ((strType=="s_d") or (strType=="r_d") or (strType=="s_m")):
+        if ((strType == "s_d") or (strType == "r_d") or (strType == "s_m")):
             xmldoc = parseString(strGGetCap)
 
             layers = xmldoc.getElementsByTagName("Layer")
 
             pos = strLayername.find("REPLACEKEY")
-            if (pos!=-1):
-                strTempLayer=strLayername[0:pos];
+            if (pos != -1):
+                strTempLayer = strLayername[0:pos]
 
             else:
                 pos = strLayername.find("YYYYMMDD")
-                if (pos!=-1):
-                    strTempLayer=strLayername[0:pos];
+                if (pos != -1):
+                    strTempLayer = strLayername[0:pos]
 
             for layer in layers:
-                strName=layer.childNodes[1].childNodes[0].nodeValue
+                strName = layer.childNodes[1].childNodes[0].nodeValue
                 pos = strName.find(strTempLayer)
-                if (pos!=-1):
-                    arrayDates.append(strName);
+                if (pos != -1):
+                    arrayDates.append(strName)
 
-            return arrayDates;
+            return arrayDates
         else:
             # r_m
-            if (pos!=-1):
+            if (pos != -1):
 
-                strGGetCap=strGGetCap[pos:]
+                strGGetCap = strGGetCap[pos:]
 
                 pos = strGGetCap.find("</Layer>")
-                strGGetCap=strGGetCap[0:pos]
-                strGGetCap="<Layer>\n<Name>"+strGGetCap+"</Layer>"
-                #print strGGetCap
+                strGGetCap = strGGetCap[0:pos]
+                strGGetCap = "<Layer>\n<Name>" + strGGetCap + "</Layer>"
+                # print strGGetCap
                 # if on geoserver the user add the metadata link referred to GN, the getCapabilities of WMS must be replaced as follow:
                 # <MetadataURL type="other">
                 # <Format>text/plain</Format>
@@ -1872,189 +1976,195 @@ def _returnGetCapabilities_dates(strHttp, strType, strStoreName, strLayername,
                 # <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="http://139.191.148.153:8080/geonetwork/srv/eng/csw?request=GetRecordById&amp;service=CSW&amp;version=2.0.2&amp;elementSetName=full&amp;outputSchema=csw:IsoRecord&amp;id=f5234534-0d76-4159-87d1-4412414c3416"/>
                 # </MetadataURL>
                 # ==> added: xmlns:xlink="http://www.w3.org/1999/xlink" otherwise the system cannot parse the string
-                pos=strGGetCap.find('OnlineResource xlink:type="simple"')
-                if (pos!=-1):
-                    strGGetCap=strGGetCap.replace('OnlineResource xlink:type="simple"', 'OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple"');
+                pos = strGGetCap.find('OnlineResource xlink:type="simple"')
+                if (pos != -1):
+                    strGGetCap = strGGetCap.replace(
+                        'OnlineResource xlink:type="simple"', 'OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple"')
 
                 xmldoc = parseString(strGGetCap)
                 try:
-                    strTag="Dimension"
+                    strTag = "Dimension"
                     slides1 = xmldoc.getElementsByTagName(strTag)
-                    strDates=str(slides1[0].childNodes[0].nodeValue)
+                    strDates = str(slides1[0].childNodes[0].nodeValue)
 
                     pos = strDates.find("T00:00:00.000Z")
-                    if (pos==-1):
+                    if (pos == -1):
 
                         # extent: from to
                         # explode dates
                         arrayDatesFT = strDates.split('/')
-                        strFromDate=arrayDatesFT[0]
-                        strToDate=arrayDatesFT[1]
-                        arrayDates=_returnArrayFromToDate(strFromDate,strToDate,strDateFormat,strInterval);
-                        #print arrayDates
-                        return arrayDates;
+                        strFromDate = arrayDatesFT[0]
+                        strToDate = arrayDatesFT[1]
+                        arrayDates = _returnArrayFromToDate(
+                            strFromDate, strToDate, strDateFormat, strInterval)
+                        # print arrayDates
+                        return arrayDates
 
                 except:
-                    strTag="Extent"
+                    strTag = "Extent"
                     slides1 = xmldoc.getElementsByTagName(strTag)
-                    strDates=slides1[0].childNodes[0].nodeValue
+                    strDates = slides1[0].childNodes[0].nodeValue
                     pos = strDates.find("T00:00:00.000Z")
-                    if (pos==-1):
+                    if (pos == -1):
 
                         # extent: from to
                         # explode dates
                         arrayDatesFT = strDates.split('/')
-                        strFromDate=arrayDatesFT[0]
-                        strToDate=arrayDatesFT[1]
-                        arrayDates=_returnArrayFromToDate(strFromDate,strToDate,strDateFormat,strInterval);
-                        #print arrayDates
+                        strFromDate = arrayDatesFT[0]
+                        strToDate = arrayDatesFT[1]
+                        arrayDates = _returnArrayFromToDate(
+                            strFromDate, strToDate, strDateFormat, strInterval)
+                        # print arrayDates
 
-                        return arrayDates;
+                        return arrayDates
 
                 arrayDates = strDates.split(',')
 
     except:
-        arrayDates=[]
-    #print arrayDates
-    return arrayDates;
+        arrayDates = []
+    # print arrayDates
+    return arrayDates
 
 
-def _returnArrayFromToDate(strFrom,strTo,strDateFormat,strInterval):
-    arrayDates=[]
+def _returnArrayFromToDate(strFrom, strTo, strDateFormat, strInterval):
+    arrayDates = []
     # Format: YYYY-MM
-    if (strDateFormat=="YYYY-MM"):
+    if (strDateFormat == "YYYY-MM"):
         # Interval: 1month
-        if (strInterval=="1m"):
-            arrayTemp=strFrom.split('-')
-            lngFY=int(arrayTemp[0])
-            lngFM=int(arrayTemp[1])
-            arrayTemp=strTo.split('-')
-            lngTY=int(arrayTemp[0])
-            lngTM=int(arrayTemp[1])
+        if (strInterval == "1m"):
+            arrayTemp = strFrom.split('-')
+            lngFY = int(arrayTemp[0])
+            lngFM = int(arrayTemp[1])
+            arrayTemp = strTo.split('-')
+            lngTY = int(arrayTemp[0])
+            lngTM = int(arrayTemp[1])
 
-            for lngY in range(lngFY,lngTY+1,1):
-                for lngM in range(1,13,1):
-                    blnAdd=1
+            for lngY in range(lngFY, lngTY + 1, 1):
+                for lngM in range(1, 13, 1):
+                    blnAdd = 1
                     if (lngY == lngFY):
                         if (lngM < lngFM):
-                            blnAdd=0
+                            blnAdd = 0
                     else:
                         if (lngY == lngTY):
                             if (lngM > lngTM):
-                                blnAdd=0
-                    if (blnAdd==1):
-                        strTempMonth=str('0'+str(lngM))
-                        arrayDates.append(str(lngY)+'-'+str(strTempMonth)[len(strTempMonth)-2:])
+                                blnAdd = 0
+                    if (blnAdd == 1):
+                        strTempMonth = str('0' + str(lngM))
+                        arrayDates.append(
+                            str(lngY) + '-' + str(strTempMonth)[len(strTempMonth) - 2:])
 
-    return arrayDates;
+    return arrayDates
 
 
-def _returnGetCapabilities_text(strHttp,strVersion):
+def _returnGetCapabilities_text(strHttp, strVersion):
     """
     Function used to retrieve the getCapabilities request.
     """
 
     # save parameters
 
-    #print strHttp
-    #print strVersion
-    request = {'service': 'WMS', 'request': 'GetCapabilities','version':strVersion}     #print "aaa"
+    # print strHttp
+    # print strVersion
+    request = {'service': 'WMS', 'request': 'GetCapabilities',
+               'version': strVersion}  # print "aaa"
     # execute the request
-    output=_executeURL(strHttp, request, 'Post');
+    output = _executeURL(strHttp, request, 'Post')
     # return the output
-    strGGetCap=output.read()
-    #print strGGetCap
+    strGGetCap = output.read()
+    # print strGGetCap
     return strGGetCap
 
 
-def _verifyDatasetDate2(lngYear,lngDay,dateFrom,dateTo,strTempInterval):
+def _verifyDatasetDate2(lngYear, lngDay, dateFrom, dateTo, strTempInterval):
     """
     Verify if a date if between from and to date range of a specific dataset.
     """
-    blnReturn=0
-    #lngOrYear=lngYear
-    lngDay=int(lngDay);
+    blnReturn = 0
+    # lngOrYear=lngYear
+    lngDay = int(lngDay)
 
-    strTempDateFrom=date.fromordinal(date(int(lngYear), 1, 1).toordinal() + int(lngDay) )
+    strTempDateFrom = date.fromordinal(
+        date(int(lngYear), 1, 1).toordinal() + int(lngDay))
 
-    #lngAddYears=0
-    lngAdd=0;
-    if (strTempInterval=="16d"):
-        lngAdd=16;
+    # lngAddYears=0
+    lngAdd = 0
+    if (strTempInterval == "16d"):
+        lngAdd = 16
     else:
-        if (strTempInterval=="15d"):
-            lngAdd=15;
+        if (strTempInterval == "15d"):
+            lngAdd = 15
         else:
-            if (strTempInterval=="1d"):
-                lngAdd=1;
+            if (strTempInterval == "1d"):
+                lngAdd = 1
             else:
                 # 10 days
-                if (strTempInterval=="10d"):
+                if (strTempInterval == "10d"):
 
-                    lngMonth=int(strTempDateFrom.month)
-                    lngAdd = lngDay+9
-                    lngDay=0;
+                    lngMonth = int(strTempDateFrom.month)
+                    lngAdd = lngDay + 9
+                    lngDay = 0
                 else:
-                    #1 month
-                    if (strTempInterval=="1m"):
-                        lngMonth=int(strTempDateFrom.month)
-                        lngAdd = date(lngYear, lngMonth+1, 1).timetuple().tm_yday-1
-                        lngDay=0;
+                    # 1 month
+                    if (strTempInterval == "1m"):
+                        lngMonth = int(strTempDateFrom.month)
+                        lngAdd = date(
+                            lngYear, lngMonth + 1, 1).timetuple().tm_yday - 1
+                        lngDay = 0
 
-
-    if ((lngDay==0)and(lngAdd==0)):
+    if ((lngDay == 0)and(lngAdd == 0)):
         return 0
     else:
-        strTempDateTo=date.fromordinal(date(lngYear, 1, 1).toordinal() + lngDay +lngAdd - 1)
+        strTempDateTo = date.fromordinal(
+            date(lngYear, 1, 1).toordinal() + lngDay + lngAdd - 1)
+
+    dateFrom = dateFrom.isoformat()
+    dateTo = dateTo.isoformat()
+
+    strTempDateFrom = str(strTempDateFrom) + " 00:00"
+    strTempDateFrom = datetime.strptime(strTempDateFrom, "%Y-%m-%d %H:%M")
+    strTempDateFrom = strTempDateFrom.isoformat()
+
+    strTempDateTo = str(strTempDateTo) + " 00:00"
+    strTempDateTo = datetime.strptime(strTempDateTo, "%Y-%m-%d %H:%M")
+    strTempDateTo = strTempDateTo.isoformat()
+
+    if (strTempDateFrom >= dateFrom and strTempDateTo <= dateTo):
+        blnReturn = 1
+
+    return blnReturn
 
 
-    dateFrom=dateFrom.isoformat()
-    dateTo=dateTo.isoformat()
-
-    strTempDateFrom=str(strTempDateFrom)+" 00:00"
-    strTempDateFrom= datetime.strptime(strTempDateFrom, "%Y-%m-%d %H:%M")
-    strTempDateFrom=strTempDateFrom.isoformat()
-
-    strTempDateTo=str(strTempDateTo)+" 00:00"
-    strTempDateTo= datetime.strptime(strTempDateTo, "%Y-%m-%d %H:%M")
-    strTempDateTo=strTempDateTo.isoformat()
-
-    if (strTempDateFrom >= dateFrom and strTempDateTo<=dateTo):
-        blnReturn=1
-
-    return blnReturn;
-
-
-def _verifyDatasetDate(strTempDate,dateFrom,dateTo):
+def _verifyDatasetDate(strTempDate, dateFrom, dateTo):
     """
     Function used to verify if a date is between date min and max.
     """
-    blnReturn=0
+    blnReturn = 0
 
-    dateFrom=dateFrom.isoformat()
-    dateTo=dateTo.isoformat()
+    dateFrom = dateFrom.isoformat()
+    dateTo = dateTo.isoformat()
 
-
-    if (strTempDate >= dateFrom and strTempDate<=dateTo):
-        blnReturn=1
+    if (strTempDate >= dateFrom and strTempDate <= dateTo):
+        blnReturn = 1
 
     # return boolean
-    return blnReturn;
+    return blnReturn
 
 
 def _deleteFile(strFile):
     """
     Function used to delete a file saved into the temporary directory.
     """
-    global strGPhysPathTemporaryDir;
-    if (strGPhysPathTemporaryDir==""):
-        strGPhysPathTemporaryDir=_returnTempDirectory(0);
+    global strGPhysPathTemporaryDir
+    if (strGPhysPathTemporaryDir == ""):
+        strGPhysPathTemporaryDir = _returnTempDirectory(0)
 
     # delete tiff file
-    os.system('rm -rf '+strFile+'>>'+strGPhysPathTemporaryDir+'log.txt');
+    os.system(
+        'rm -rf ' + strFile + '>>' + strGPhysPathTemporaryDir + 'log.txt')
 
 
-def convertPolygon(strPoint,inputEPSG,outputEPSG):
+def convertPolygon(strPoint, inputEPSG, outputEPSG):
     """
     Function used to convert a polygon from a projection to another one.
     """
@@ -2062,17 +2172,17 @@ def convertPolygon(strPoint,inputEPSG,outputEPSG):
     arrayPoint = strPoint.split(' ')
     # latS=[]
     # lonS=[]
-    arrayConverts=[]
+    arrayConverts = []
     for r in arrayPoint:
         arrayTemp = r.split(',')
-        if (arrayTemp[0]!=""):
+        if (arrayTemp[0] != ""):
             pointX = float(arrayTemp[0])
             pointY = float(arrayTemp[1])
 
             # Spatial Reference System
 
-            arrayValues=[]
-            if (inputEPSG!=outputEPSG):
+            arrayValues = []
+            if (inputEPSG != outputEPSG):
                 # create a geometry from coordinates
                 point = ogr.Geometry(ogr.wkbPoint)
 
@@ -2085,16 +2195,17 @@ def convertPolygon(strPoint,inputEPSG,outputEPSG):
                 outSpatialRef = osr.SpatialReference()
                 outSpatialRef.ImportFromEPSG(outputEPSG)
 
-                coordTransform = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
+                coordTransform = osr.CoordinateTransformation(
+                    inSpatialRef, outSpatialRef)
 
                 # transform point
                 point.Transform(coordTransform)
-                arrayValues.append(point.GetX());
-                arrayValues.append(point.GetY());
+                arrayValues.append(point.GetX())
+                arrayValues.append(point.GetY())
             else:
-                arrayValues.append(pointX);
-                arrayValues.append(pointY);
-            arrayConverts.append(arrayValues);
+                arrayValues.append(pointX)
+                arrayValues.append(pointY)
+            arrayConverts.append(arrayValues)
 
     return arrayConverts
 
@@ -2104,172 +2215,191 @@ def _checkWidthHeightValues(lngW, lngH):
     Function used to verify if a WCS is greater than a maximum width and height.
     """
 
-    strSection='WCS'
-    strKey='WCS_CHECKMAXSIZE'
-    blnGCheckMaximunSize=_returnIniValue(strSection, strKey)
+    strSection = 'WCS'
+    strKey = 'WCS_CHECKMAXSIZE'
+    blnGCheckMaximunSize = _returnIniValue(strSection, strKey)
 
-
-    arrayValues={}
-    if (blnGCheckMaximunSize==0):
-        arrayValues["W"]=lngW
-        arrayValues["H"]=lngH
+    arrayValues = {}
+    if (blnGCheckMaximunSize == 0):
+        arrayValues["W"] = lngW
+        arrayValues["H"] = lngH
     else:
-        strKey='MAXSIZE_W'
+        strKey = 'MAXSIZE_W'
         lngMaximunSizeW = _returnIniValue(strSection, strKey)
-        strKey='MAXSIZE_H'
+        strKey = 'MAXSIZE_H'
         lngMaximunSizeH = _returnIniValue(strSection, strKey)
 
-        if (lngW>lngMaximunSizeW or lngH>lngMaximunSizeH):
-            if (lngW>lngMaximunSizeW and lngH>lngMaximunSizeH):
-                if (lngW>lngH):
-                    lngWTemp=lngMaximunSizeW
-                    lngHTemp=(lngWTemp*lngH)/lngW
+        if (lngW > lngMaximunSizeW or lngH > lngMaximunSizeH):
+            if (lngW > lngMaximunSizeW and lngH > lngMaximunSizeH):
+                if (lngW > lngH):
+                    lngWTemp = lngMaximunSizeW
+                    lngHTemp = (lngWTemp * lngH) / lngW
                 else:
-                    lngHTemp=lngMaximunSizeH
-                    lngWTemp=(lngHTemp*lngW)/lngH
+                    lngHTemp = lngMaximunSizeH
+                    lngWTemp = (lngHTemp * lngW) / lngH
             else:
-                if (lngW>lngMaximunSizeW):
-                    lngWTemp=lngMaximunSizeW
-                    lngHTemp=(lngWTemp*lngH)/lngW
+                if (lngW > lngMaximunSizeW):
+                    lngWTemp = lngMaximunSizeW
+                    lngHTemp = (lngWTemp * lngH) / lngW
                 else:
-                    lngHTemp=lngMaximunSizeH
-                    lngWTemp=(lngHTemp*lngW)/lngH
-            arrayValues["W"]=lngWTemp
-            arrayValues["H"]=lngHTemp
+                    lngHTemp = lngMaximunSizeH
+                    lngWTemp = (lngHTemp * lngW) / lngH
+            arrayValues["W"] = lngWTemp
+            arrayValues["H"] = lngHTemp
 
         else:
-            arrayValues["W"]=lngW
-            arrayValues["H"]=lngH
+            arrayValues["W"] = lngW
+            arrayValues["H"] = lngH
 
-    return arrayValues;
+    return arrayValues
 
 
-def _getCropCoverageFromGeometry(strDate,arrayParams,arrayFName,arrayVDataset):
+def _getCropCoverageFromGeometry(strDate, arrayParams, arrayFName, arrayVDataset):
     """
     Function used to execute a crop coverage from a predefined geometry.
     """
-    global strGWCSService;
-    global strGWCSVersion;
-    global strGWCSRequest;
+    global strGWCSService
+    global strGWCSVersion
+    global strGWCSRequest
 
     # set the request
-    request = {'version': strGWCSVersion, 'request': strGWCSRequest, 'service':strGWCSService}
-    strMap=''
-    strTempCoverage=''
-    strTempDate=str(strDate)[:10]
+    request = {'version': strGWCSVersion,
+               'request': strGWCSRequest, 'service': strGWCSService}
+    strMap = ''
+    strTempCoverage = ''
+    strTempDate = str(strDate)[:10]
 
     if (arrayVDataset["serverType"] == "MAPSERVER"):
         arrayTemp = arrayVDataset["wcs"].split('?')
-        strHTTP=arrayTemp[0]+'?'
-        strMap=arrayTemp[1][4:]
-        request['map']=strMap
-        request['format']="geotiff"
-        strTempD=str(strTempDate)[:4]+str(strTempDate)[5:len(strTempDate)-3]+str(strTempDate)[8:len(strTempDate)];
-        strTempCoverage=arrayParams["strCoverage"].replace("YYYYMMDD", strTempD);
-        if (arrayFName["type"]=="r_m"):
-            strTempD=str(strDate)[:4]+'-'+str(strDate)[4:-2]+'-'+str(strDate)[6:];
+        strHTTP = arrayTemp[0] + '?'
+        strMap = arrayTemp[1][4:]
+        request['map'] = strMap
+        request['format'] = "geotiff"
+        strTempD = str(strTempDate)[
+            :4] + str(strTempDate)[5:len(strTempDate) - 3] + str(strTempDate)[8:len(strTempDate)]
+        strTempCoverage = arrayParams[
+            "strCoverage"].replace("YYYYMMDD", strTempD)
+        if (arrayFName["type"] == "r_m"):
+            strTempD = str(strDate)[:4] + '-' + \
+                str(strDate)[4:-2] + '-' + str(strDate)[6:]
 
-            request['time']=_returnTimeFormat(strTempDate,arrayFName["dateFormat"])
+            request['time'] = _returnTimeFormat(
+                strTempDate, arrayFName["dateFormat"])
     else:
-        strHTTP=arrayVDataset["wcs"]
-        request['format']="geotiff"
+        strHTTP = arrayVDataset["wcs"]
+        request['format'] = "geotiff"
 
+        if (arrayFName["type"] == "r_m"):
+            strTempD = str(strDate)[:4] + '-' + \
+                str(strDate)[4:-2] + '-' + str(strDate)[6:]
 
-        if (arrayFName["type"]=="r_m"):
-            strTempD=str(strDate)[:4]+'-'+str(strDate)[4:-2]+'-'+str(strDate)[6:];
-
-            request['time']=_returnTimeFormat(strTempDate,arrayFName["dateFormat"])
-            strTempCoverage=arrayParams["strCoverage"]
+            request['time'] = _returnTimeFormat(
+                strTempDate, arrayFName["dateFormat"])
+            strTempCoverage = arrayParams["strCoverage"]
         else:
-            strTempD=str(strTempDate)[:4]+str(strTempDate)[5:len(strTempDate)-3]+str(strTempDate)[8:len(strTempDate)];
-            strTempCoverage=arrayParams["strCoverage"].replace("YYYYMMDD", strTempD);
+            strTempD = str(strTempDate)[
+                :4] + str(strTempDate)[5:len(strTempDate) - 3] + str(strTempDate)[8:len(strTempDate)]
+            strTempCoverage = arrayParams[
+                "strCoverage"].replace("YYYYMMDD", strTempD)
 
-
-    request['coverage']=strTempCoverage
+    request['coverage'] = strTempCoverage
     # box reprojected values
-    strGBBox=_returnProjectedValues(arrayParams["strAreaFromLon"],arrayParams["strAreaFromLat"],arrayParams["strAreaToLon"],arrayParams["strAreaToLat"],arrayParams["convertedCrs"],arrayVDataset["crs"]);
-    request['BBox']=strGBBox;
-    request['crs']=arrayVDataset["crs"]
+    strGBBox = _returnProjectedValues(arrayParams["strAreaFromLon"], arrayParams["strAreaFromLat"], arrayParams[
+                                      "strAreaToLon"], arrayParams["strAreaToLat"], arrayParams["convertedCrs"], arrayVDataset["crs"])
+    request['BBox'] = strGBBox
+    request['crs'] = arrayVDataset["crs"]
 
-    global strGEPSGF4326Proj;
-    if (arrayVDataset["crs"]==strGEPSGF4326Proj):
+    global strGEPSGF4326Proj
+    if (arrayVDataset["crs"] == strGEPSGF4326Proj):
         arrayTemp = strGBBox.split(',')
-        widthValue= int(((float(arrayTemp[2])-float(arrayTemp[0]))/float(arrayVDataset["xsize"])))
-        heightValue= int(((float(arrayTemp[3])-float(arrayTemp[1]))/float(arrayVDataset["ysize"])))
+        widthValue = int(
+            ((float(arrayTemp[2]) - float(arrayTemp[0])) / float(arrayVDataset["xsize"])))
+        heightValue = int(
+            ((float(arrayTemp[3]) - float(arrayTemp[1])) / float(arrayVDataset["ysize"])))
     else:
-        widthValue= int(((float(arrayParams["strAreaToLon"])-float(arrayParams["strAreaFromLon"]))/float(arrayVDataset["xsize"])))
-        heightValue= int(((float(arrayParams["strAreaToLat"])-float(arrayParams["strAreaFromLat"]))/float(arrayVDataset["ysize"])))
+        widthValue = int(((float(arrayParams[
+                         "strAreaToLon"]) - float(arrayParams["strAreaFromLon"])) / float(arrayVDataset["xsize"])))
+        heightValue = int(((float(arrayParams[
+                          "strAreaToLat"]) - float(arrayParams["strAreaFromLat"])) / float(arrayVDataset["ysize"])))
 
     # width and height maximum values
-    arrayTemp=_checkWidthHeightValues(widthValue,heightValue)
-    request['width']=arrayTemp["W"]
-    request['height']=arrayTemp["H"]
-    #print request
+    arrayTemp = _checkWidthHeightValues(widthValue, heightValue)
+    request['width'] = arrayTemp["W"]
+    request['height'] = arrayTemp["H"]
+    # print request
     # send the request
     data = urlencode(request)
-    strCoverageHttp=(strHTTP+"?"+data)
-    #print strCoverageHttp
-    strCoverageHttp=strCoverageHttp.replace("&", "&amp;");
+    strCoverageHttp = (strHTTP + "?" + data)
+    # print strCoverageHttp
+    strCoverageHttp = strCoverageHttp.replace("&", "&amp;")
 
-    strOWS=_returnVariableDef("OWS");
-    strOWSWPS=_returnVariableDef("WPS")
+    strOWS = _returnVariableDef("OWS")
+    strOWSWPS = _returnVariableDef("WPS")
 
-    global strGWPSService;
-    global strGWPSVersion;
-    global strGWPSRequest;
+    global strGWPSService
+    global strGWPSVersion
+    global strGWPSRequest
 
     # CRS if different from 4326
-    if (arrayVDataset["crs"]!=strGEPSGF4326Proj):
+    if (arrayVDataset["crs"] != strGEPSGF4326Proj):
         # output of the request
-        output=_executeURL(strHTTP, request, 'Post');
+        output = _executeURL(strHTTP, request, 'Post')
 
-        strFilename=_returnFilename()
+        strFilename = _returnFilename()
 
-        strInputProj=arrayVDataset["crs"].replace("EPSG:","");
-        strOutputProj="4326";
+        strInputProj = arrayVDataset["crs"].replace("EPSG:", "")
+        strOutputProj = "4326"
 
-        strFilenameInput=strFilename.replace(".tiff", "_"+strInputProj+".tiff");
-        strFilenameOutput=strFilename.replace(".tiff", "_"+strOutputProj+".tiff");
+        strFilenameInput = strFilename.replace(
+            ".tiff", "_" + strInputProj + ".tiff")
+        strFilenameOutput = strFilename.replace(
+            ".tiff", "_" + strOutputProj + ".tiff")
 
         request = {}
-        f = open(strFilenameInput,'wb')
-        #print output.read()
+        f = open(strFilenameInput, 'wb')
+        # print output.read()
         f.write(output.read())
         f.close()
         # reproject the dataset
-        global strGPhysPathTemporaryDir,strGHttpPathTemporaryDir;
-        if (strGPhysPathTemporaryDir==""):
-            strGPhysPathTemporaryDir=_returnTempDirectory(0);
+        global strGPhysPathTemporaryDir, strGHttpPathTemporaryDir
+        if (strGPhysPathTemporaryDir == ""):
+            strGPhysPathTemporaryDir = _returnTempDirectory(0)
 
-        if (strGHttpPathTemporaryDir==""):
-            strGHttpPathTemporaryDir=_returnTempDirectory(1);
+        if (strGHttpPathTemporaryDir == ""):
+            strGHttpPathTemporaryDir = _returnTempDirectory(1)
         # reproject from one projection to 4326 in order to crop it
 
-        #print strFilenameInput
-        #print strFilenameOutput
-        os.system('gdalwarp '+strFilenameInput+' '+strFilenameOutput+' -t_srs "+proj=longlat +ellps=WGS84">>'+strGPhysPathTemporaryDir+'/log.txt');
-        #print 'gdalwarp '+strFilenameInput+' '+strFilenameOutput+' -t_srs "+proj=longlat +ellps=WGS84">>'+strGPhysPathTemporaryDir+'/log.txt'
+        # print strFilenameInput
+        # print strFilenameOutput
+        os.system('gdalwarp ' + strFilenameInput + ' ' + strFilenameOutput +
+                  ' -t_srs "+proj=longlat +ellps=WGS84">>' + strGPhysPathTemporaryDir + '/log.txt')
+        # print 'gdalwarp '+strFilenameInput+' '+strFilenameOutput+' -t_srs
+        # "+proj=longlat +ellps=WGS84">>'+strGPhysPathTemporaryDir+'/log.txt'
 
-        strOnlyFilenameOutput=strFilenameOutput.replace(strGPhysPathTemporaryDir, "");
+        strOnlyFilenameOutput = strFilenameOutput.replace(
+            strGPhysPathTemporaryDir, "")
 
-        strInputFile=strGHttpPathTemporaryDir+strOnlyFilenameOutput;
-        strCoverageHttp=strGHttpPathTemporaryDir+strOnlyFilenameOutput;
+        strInputFile = strGHttpPathTemporaryDir + strOnlyFilenameOutput
+        strCoverageHttp = strGHttpPathTemporaryDir + strOnlyFilenameOutput
 
         request = {}
         # WPS
 
-        request['body']='<?xml version="1.0" encoding="UTF-8"?> <wps:Execute version="'+strGWPSVersion+'" service="'+strGWPSService+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/'+strGWPSVersion+'" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/'+strGWPSVersion+'" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/'+strGWPSVersion+' http://schemas.opengis.net/wps/'+strGWPSVersion+'/wpsAll.xsd"> <ows:Identifier>'+strGWPSRequest+'</ows:Identifier> <wps:DataInputs> <wps:Input> <ows:Identifier>coverage</ows:Identifier> <wps:Reference mimeType="image/tiff" xlink:href="'+strInputFile+'" method="GET"/> </wps:Input> <wps:Input> <ows:Identifier>cropShape</ows:Identifier> <wps:Data> <wps:ComplexData mimeType="text/xml; subtype=gml/3.1.1"><![CDATA[POLYGON (('+arrayParams["strGGeometry"]+'))]]></wps:ComplexData> </wps:Data> </wps:Input> </wps:DataInputs> <wps:ResponseForm> <wps:RawDataOutput mimeType="image/tiff"> <ows:Identifier>result</ows:Identifier> </wps:RawDataOutput> </wps:ResponseForm> </wps:Execute>';
-        request['form_hf_0']=''
-        request['username']=''
-        request['password']=''
-        request['url']=strOWS;
+        request['body'] = '<?xml version="1.0" encoding="UTF-8"?> <wps:Execute version="' + strGWPSVersion + '" service="' + strGWPSService + '" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/' + strGWPSVersion + '" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/' + strGWPSVersion + '" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/' + strGWPSVersion + ' http://schemas.opengis.net/wps/' + \
+            strGWPSVersion + '/wpsAll.xsd"> <ows:Identifier>' + strGWPSRequest + '</ows:Identifier> <wps:DataInputs> <wps:Input> <ows:Identifier>coverage</ows:Identifier> <wps:Reference mimeType="image/tiff" xlink:href="' + strInputFile + \
+            '" method="GET"/> </wps:Input> <wps:Input> <ows:Identifier>cropShape</ows:Identifier> <wps:Data> <wps:ComplexData mimeType="text/xml; subtype=gml/3.1.1"><![CDATA[POLYGON ((' + arrayParams[
+            "strGGeometry"] + '))]]></wps:ComplexData> </wps:Data> </wps:Input> </wps:DataInputs> <wps:ResponseForm> <wps:RawDataOutput mimeType="image/tiff"> <ows:Identifier>result</ows:Identifier> </wps:RawDataOutput> </wps:ResponseForm> </wps:Execute>'
+        request['form_hf_0'] = ''
+        request['username'] = ''
+        request['password'] = ''
+        request['url'] = strOWS
 
         # execute the req   uest
-        output=_executeURL(strOWSWPS, request, 'Post');
+        output = _executeURL(strOWSWPS, request, 'Post')
 
         request = {}
         # save the file
-        f = open(strFilename,'wb')
+        f = open(strFilename, 'wb')
         f.write(output.read())
         f.close()
 
@@ -2282,40 +2412,43 @@ def _getCropCoverageFromGeometry(strDate,arrayParams,arrayFName,arrayVDataset):
             data = band.ReadAsArray(0, 0, cols, rows)
 
         except:
-            data=''
+            data = ''
 
-        _deleteFile(strFilenameInput);
-        _deleteFile(strFilenameOutput);
+        _deleteFile(strFilenameInput)
+        _deleteFile(strFilenameOutput)
         _deleteFile(strFilename)
 
         return data
     else:
         request = {}
-        request['body']='<?xml version="1.0" encoding="UTF-8"?> <wps:Execute version="'+strGWPSVersion+'" service="'+strGWPSService+'" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/'+strGWPSVersion+'" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/'+strGWPSVersion+'" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/'+strGWPSVersion+' http://schemas.opengis.net/wps/'+strGWPSVersion+'/wpsAll.xsd"> <ows:Identifier>'+strGWPSRequest+'</ows:Identifier> <wps:DataInputs> <wps:Input> <ows:Identifier>coverage</ows:Identifier> <wps:Reference mimeType="image/tiff" xlink:href="'+strCoverageHttp+'" method="GET"/> </wps:Input> <wps:Input> <ows:Identifier>cropShape</ows:Identifier> <wps:Data> <wps:ComplexData mimeType="text/xml; subtype=gml/3.1.1"><![CDATA[POLYGON(('+arrayParams["strGGeometry"]+'))]]></wps:ComplexData> </wps:Data> </wps:Input> </wps:DataInputs> <wps:ResponseForm> <wps:RawDataOutput mimeType="image/tiff"> <ows:Identifier>result</ows:Identifier> </wps:RawDataOutput> </wps:ResponseForm> </wps:Execute>';
+        request['body'] = '<?xml version="1.0" encoding="UTF-8"?> <wps:Execute version="' + strGWPSVersion + '" service="' + strGWPSService + '" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.opengis.net/wps/' + strGWPSVersion + '" xmlns:wfs="http://www.opengis.net/wfs" xmlns:wps="http://www.opengis.net/wps/' + strGWPSVersion + '" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml" xmlns:ogc="http://www.opengis.net/ogc" xmlns:wcs="http://www.opengis.net/wcs/1.1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wps/' + strGWPSVersion + ' http://schemas.opengis.net/wps/' + \
+            strGWPSVersion + '/wpsAll.xsd"> <ows:Identifier>' + strGWPSRequest + '</ows:Identifier> <wps:DataInputs> <wps:Input> <ows:Identifier>coverage</ows:Identifier> <wps:Reference mimeType="image/tiff" xlink:href="' + strCoverageHttp + \
+            '" method="GET"/> </wps:Input> <wps:Input> <ows:Identifier>cropShape</ows:Identifier> <wps:Data> <wps:ComplexData mimeType="text/xml; subtype=gml/3.1.1"><![CDATA[POLYGON((' + arrayParams[
+            "strGGeometry"] + '))]]></wps:ComplexData> </wps:Data> </wps:Input> </wps:DataInputs> <wps:ResponseForm> <wps:RawDataOutput mimeType="image/tiff"> <ows:Identifier>result</ows:Identifier> </wps:RawDataOutput> </wps:ResponseForm> </wps:Execute>'
 
-    request['form_hf_0']=''
-    request['username']=''
-    request['password']=''
-    request['url']=strOWS;
+    request['form_hf_0'] = ''
+    request['username'] = ''
+    request['password'] = ''
+    request['url'] = strOWS
 
-    result=_saveFile(request,strOWSWPS)
+    result = _saveFile(request, strOWSWPS)
     return result
 
 
-def _returnTimeFormat(strTempDate,strFormat):
+def _returnTimeFormat(strTempDate, strFormat):
     """
     Function used to return the correct time format.
     """
-    strTemp=''
-    if (strFormat=='YYYY-MM'):
+    strTemp = ''
+    if (strFormat == 'YYYY-MM'):
         arrayTemp = strTempDate.split('-')
-        strTemp=arrayTemp[0]+'-'+arrayTemp[1]
+        strTemp = arrayTemp[0] + '-' + arrayTemp[1]
     else:
-        strTemp=strTempDate+'T00:00:00.000Z'
+        strTemp = strTempDate + 'T00:00:00.000Z'
     return strTemp
 
 
-def _getCoverage(strDate,arrayParams,arrayFName,arrayVDataset):
+def _getCoverage(strDate, arrayParams, arrayFName, arrayVDataset):
     """
     Function used to execute a coverage.
     """
@@ -2325,130 +2458,142 @@ def _getCoverage(strDate,arrayParams,arrayFName,arrayVDataset):
     global strGWCSRequest
 
     # save all input parameters
-    request = {'version': strGWCSVersion, 'request': strGWCSRequest, 'service': strGWCSService}
+    request = {'version': strGWCSVersion,
+               'request': strGWCSRequest, 'service': strGWCSService}
 
-    strMap=''
-    strTempCoverage=''
-    strTempDate=str(strDate)[:10]
+    strMap = ''
+    strTempCoverage = ''
+    strTempDate = str(strDate)[:10]
     if (arrayVDataset["serverType"] == "MAPSERVER"):
         arrayTemp = arrayVDataset["wcs"].split('?')
-        strHTTP=arrayTemp[0]+'?'
-        strMap=arrayTemp[1][4:]
-        request['map']=strMap
-        request['format']="geotiff"
+        strHTTP = arrayTemp[0] + '?'
+        strMap = arrayTemp[1][4:]
+        request['map'] = strMap
+        request['format'] = "geotiff"
 
-        strTempD=str(strTempDate)[:4]+str(strTempDate)[5:len(strTempDate)-3]+str(strTempDate)[8:len(strTempDate)];
-        strTempCoverage=arrayParams["strCoverage"].replace("YYYYMMDD", strTempD);
-        if (arrayFName["type"]=="r_m"):
-            request['time']=_returnTimeFormat(strTempDate,arrayFName["dateFormat"])
+        strTempD = str(strTempDate)[
+            :4] + str(strTempDate)[5:len(strTempDate) - 3] + str(strTempDate)[8:len(strTempDate)]
+        strTempCoverage = arrayParams[
+            "strCoverage"].replace("YYYYMMDD", strTempD)
+        if (arrayFName["type"] == "r_m"):
+            request['time'] = _returnTimeFormat(
+                strTempDate, arrayFName["dateFormat"])
 
     else:
-        strHTTP=arrayVDataset["wcs"]
-        request['format']="geotiff"
+        strHTTP = arrayVDataset["wcs"]
+        request['format'] = "geotiff"
 
-        if (arrayFName["type"]=="r_m"):
-            request['time']=_returnTimeFormat(strTempDate,arrayFName["dateFormat"])
-            strTempCoverage=arrayParams["strCoverage"]
+        if (arrayFName["type"] == "r_m"):
+            request['time'] = _returnTimeFormat(
+                strTempDate, arrayFName["dateFormat"])
+            strTempCoverage = arrayParams["strCoverage"]
         else:
-            strTempD=str(strTempDate)[:4]+str(strTempDate)[5:len(strTempDate)-3]+str(strTempDate)[8:len(strTempDate)];
-            strTempCoverage=arrayParams["strCoverage"].replace("YYYYMMDD", strTempD);
+            strTempD = str(strTempDate)[
+                :4] + str(strTempDate)[5:len(strTempDate) - 3] + str(strTempDate)[8:len(strTempDate)]
+            strTempCoverage = arrayParams[
+                "strCoverage"].replace("YYYYMMDD", strTempD)
 
     assert len(arrayParams["strCoverage"]) > 0
     # coverage
-    request['coverage']=strTempCoverage
+    request['coverage'] = strTempCoverage
     # reproject the box
-    strGBBox=_returnProjectedValues(arrayParams["txtLLon"],arrayParams["txtLLat"],arrayParams["txtRLon"],arrayParams["txtULat"],arrayParams["crs"],arrayVDataset["crs"]);
-    request['BBox']=strGBBox;
+    strGBBox = _returnProjectedValues(arrayParams["txtLLon"], arrayParams["txtLLat"], arrayParams[
+                                      "txtRLon"], arrayParams["txtULat"], arrayParams["crs"], arrayVDataset["crs"])
+    request['BBox'] = strGBBox
     # set the crs
-    request['crs']=arrayVDataset["crs"]
+    request['crs'] = arrayVDataset["crs"]
 
     # checks max width and height values
-    arrayTemp=_checkWidthHeightValues(arrayParams["widthValue"],arrayParams["heightValue"])
-    request['width']=arrayTemp["W"]
-    request['height']=arrayTemp["H"]
+    arrayTemp = _checkWidthHeightValues(
+        arrayParams["widthValue"], arrayParams["heightValue"])
+    request['width'] = arrayTemp["W"]
+    request['height'] = arrayTemp["H"]
 
     # save the output
-    result=_saveFile(request,strHTTP)
+    result = _saveFile(request, strHTTP)
 
     return result
 
 
-def _transformProjectedValues(strFromProj,strToProj,txtLLon,txtLLat,txtRLon,txtULat,strType):
+def _transformProjectedValues(strFromProj, strToProj, txtLLon, txtLLat, txtRLon, txtULat, strType):
     """
     Translate projection values.
     """
     # set the source projection
     source = osr.SpatialReference()
-    lngFrom=int(strFromProj.replace("EPSG:", ""))
-    if (lngFrom==900913):
-        lngFrom=3857
+    lngFrom = int(strFromProj.replace("EPSG:", ""))
+    if (lngFrom == 900913):
+        lngFrom = 3857
     source.ImportFromEPSG(lngFrom)
     # set the target projection
     target = osr.SpatialReference()
-    lngTo=int(strToProj.replace("EPSG:", ""))
-    if (lngTo==900913):
-        lngTo=3857
+    lngTo = int(strToProj.replace("EPSG:", ""))
+    if (lngTo == 900913):
+        lngTo = 3857
     target.ImportFromEPSG(lngTo)
-    transform1 = osr.CoordinateTransformation(source,target)
+    transform1 = osr.CoordinateTransformation(source, target)
 
     if (strType == 'LL'):
-        strTemp="POINT ("+str(txtLLon)+" "+str(txtLLat)+")"
+        strTemp = "POINT (" + str(txtLLon) + " " + str(txtLLat) + ")"
     else:
-        strTemp="POINT ("+str(txtRLon)+" "+str(txtULat)+")"
+        strTemp = "POINT (" + str(txtRLon) + " " + str(txtULat) + ")"
 
     point1 = ogr.CreateGeometryFromWkt(strTemp)
     point1.Transform(transform1)
     # transform point
-    LLpoint=str(point1.ExportToWkt())[7:-1]
-    LLpoint=LLpoint.replace(" ", ",");
+    LLpoint = str(point1.ExportToWkt())[7:-1]
+    LLpoint = LLpoint.replace(" ", ",")
     point1.Destroy()
     return LLpoint
 
 
-def _returnProjectedValues(txtLLon,txtLLat,txtRLon,txtULat,strFromProj,strToProj):
+def _returnProjectedValues(txtLLon, txtLLat, txtRLon, txtULat, strFromProj, strToProj):
     """
     Translate points from a projection to another one.
     """
     # Lower left point
-    LLpoint=_transformProjectedValues(strFromProj,strToProj,txtLLon,txtLLat,txtRLon,txtULat,'LL');
+    LLpoint = _transformProjectedValues(
+        strFromProj, strToProj, txtLLon, txtLLat, txtRLon, txtULat, 'LL')
     # Upper right point
-    URpoint=_transformProjectedValues(strFromProj,strToProj,txtLLon,txtLLat,txtRLon,txtULat,'UR');
+    URpoint = _transformProjectedValues(
+        strFromProj, strToProj, txtLLon, txtLLat, txtRLon, txtULat, 'UR')
     # return it
-    return str(LLpoint)+','+str(URpoint)
+    return str(LLpoint) + ',' + str(URpoint)
 
 
-def _returnMeanValue(strOperation,data,arrayVDataset,strFormula,lngDatasetValue,blnCalculateSD,strColorScale):
+def _returnMeanValue(strOperation, data, arrayVDataset, strFormula, lngDatasetValue, blnCalculateSD, strColorScale):
     """
     Function used to return the meaning value.
     """
 
-    clean_data=[]
+    clean_data = []
     # lngMaxValue=''
     # arrayValues=[]
 
-    strTemp=strFormula
+    strTemp = strFormula
     #arrayTemp = strTemp.split('_')
     # strType=arrayTemp[0]
 
-    if (strOperation=="BOX" or strOperation=="SHAPE"):
+    if (strOperation == "BOX" or strOperation == "SHAPE"):
         # BOX or SHAPE
         # for each row
         for r in data:
             # for each column
             for c in r:
 
-                # verify if the value is lower than the maximum value and greater than the minimum value
-                if ((float(c) >=float(arrayVDataset["minValue"])) and  (float(c)<=float(arrayVDataset["maxValue"]))):
+                # verify if the value is lower than the maximum value and
+                # greater than the minimum value
+                if ((float(c) >= float(arrayVDataset["minValue"])) and (float(c) <= float(arrayVDataset["maxValue"]))):
                     # append it
                     clean_data.append(c)
     else:
         # POINT
-        #print arrayVDataset["minValue"]
-        #print arrayVDataset["maxValue"]
+        # print arrayVDataset["minValue"]
+        # print arrayVDataset["maxValue"]
 
-        if (len(data)==3 and (len(data[0])==3)):
-            if ((data[1,1] >=float(arrayVDataset["minValue"])) and  (data[1,1]<=float(arrayVDataset["maxValue"]))):
-                clean_data.append(data[1,1])
+        if (len(data) == 3 and (len(data[0]) == 3)):
+            if ((data[1, 1] >= float(arrayVDataset["minValue"])) and (data[1, 1] <= float(arrayVDataset["maxValue"]))):
+                clean_data.append(data[1, 1])
 
         else:
             return ''
@@ -2456,159 +2601,165 @@ def _returnMeanValue(strOperation,data,arrayVDataset,strFormula,lngDatasetValue,
     # =======================
     # STEPCHART_PERC
     # =======================
-    if (strFormula=='STEPCHART_PERC'):
-        strTemp=''
-        if (len(clean_data)>0):
-            blnMax=0
+    if (strFormula == 'STEPCHART_PERC'):
+        strTemp = ''
+        if (len(clean_data) > 0):
+            blnMax = 0
             #clean_data_values= list(set(clean_data))
 
             # return an array witout duplicated and empry values
-            clean_data.sort();
+            clean_data.sort()
             # sort the array
             # lngMax=0
             # lngValue=''
-            if (blnMax==0):
+            if (blnMax == 0):
                 # num of elements
-                lngNumElements=len(clean_data);
+                lngNumElements = len(clean_data)
 
                 # group all values and return an array with keys and values
                 a = np.array(clean_data)
 
-                c=Counter(a)
+                c = Counter(a)
 
                 # keys
-                colors=c.keys();
+                colors = c.keys()
 
                 # number of keys
-                values=c.values();
+                values = c.values()
 
-                #result=np.bincount(a)
-                strTemp=''
-                #strColors=''
+                # result=np.bincount(a)
+                strTemp = ''
+                # strColors=''
 
-                arrayFinal=[]
+                arrayFinal = []
                 # return the number of elements
 
-                lngNumMax=int(_returnColorsScale_SC(strColorScale,"NUMFIELDS"));
-                listaVars = range(1,lngNumMax+1,1)
+                lngNumMax = int(
+                    _returnColorsScale_SC(strColorScale, "NUMFIELDS"))
+                listaVars = range(1, lngNumMax + 1, 1)
 
                 # count the number of elements
                 for cont in listaVars:
-                    arrayFinal.append(0);
+                    arrayFinal.append(0)
 
-                if (colors[0]==0):
-                    lngNumElements=lngNumElements-values[0]
+                if (colors[0] == 0):
+                    lngNumElements = lngNumElements - values[0]
                 for pos in listaVars:
-                    cont=0;
-                    lngOutput=-1
+                    cont = 0
+                    lngOutput = -1
                     for value in colors:
-                        if (value==pos):
+                        if (value == pos):
 
-                            lngOutput=cont
-                        cont=cont+1
+                            lngOutput = cont
+                        cont = cont + 1
 
-                    if (lngOutput!=-1):
-                        arrayFinal[pos-1]=values[lngOutput]
-                cont=0
+                    if (lngOutput != -1):
+                        arrayFinal[pos - 1] = values[lngOutput]
+                cont = 0
 
                 # calculate the %
                 for value in arrayFinal:
 
-                    lngPerc=0
-                    if (value>0):
-                        lngPerc=float((float(value)*100.0)/float(lngNumElements))
-                    #save it into a string
-                    strTemp+=str(lngPerc)+','
-                    cont=cont+1
-                strTemp=strTemp[:-1]
+                    lngPerc = 0
+                    if (value > 0):
+                        lngPerc = float(
+                            (float(value) * 100.0) / float(lngNumElements))
+                    # save it into a string
+                    strTemp += str(lngPerc) + ','
+                    cont = cont + 1
+                strTemp = strTemp[:-1]
         return strTemp
 
-    if len(clean_data)>0:
+    if len(clean_data) > 0:
         # BOX and SHAPE
-        if (strOperation=="BOX" or strOperation=="SHAPE"):
+        if (strOperation == "BOX" or strOperation == "SHAPE"):
             # if the meaning value is valorized
-            if (str(lngDatasetValue)==""):
+            if (str(lngDatasetValue) == ""):
                 # return the meaning value
                 return np.mean(clean_data)
             else:
                 # calculate Spatial Deviation
-                if (int(blnCalculateSD)==1):
+                if (int(blnCalculateSD) == 1):
 
-                    lngSum=0;
-                    numValues=len(clean_data)
+                    lngSum = 0
+                    numValues = len(clean_data)
                     for r in clean_data:
-                        lngSum+=abs(r-float(lngDatasetValue))
-                    lngReturn=lngSum/numValues
+                        lngSum += abs(r - float(lngDatasetValue))
+                    lngReturn = lngSum / numValues
                     # return value
-                    return lngReturn;
+                    return lngReturn
 
                 else:
                     # return mean value
                     return np.mean(clean_data)
         else:
             # POINT
-            if (int(blnCalculateSD)==1):
-                return "";
+            if (int(blnCalculateSD) == 1):
+                return ""
             else:
                 return np.mean(clean_data)
     else:
         return ''
 
 
-def _returnMinMaxValue(arrayFName,arrayVDataset):
+def _returnMinMaxValue(arrayFName, arrayVDataset):
     """
     Function that returns the minimum and maximun values for a dataset.
     """
-    lngMinNewValue=""
-    lngMaxNewValue=""
+    lngMinNewValue = ""
+    lngMaxNewValue = ""
 
-    strTemp=arrayFName["formula"]
+    strTemp = arrayFName["formula"]
     arrayTemp = strTemp.split('_')
-    strType=arrayTemp[1]
+    strType = arrayTemp[1]
 
     # SLOPE
-    if (strType=='SLOPE'):
-        lngMinNewValue=float(arrayVDataset["minValue"])*float(arrayVDataset["scaleFactor"])+float(arrayVDataset["offset"])
-        lngMaxNewValue=float(arrayVDataset["maxValue"])*float(arrayVDataset["scaleFactor"])+float(arrayVDataset["offset"])
+    if (strType == 'SLOPE'):
+        lngMinNewValue = float(arrayVDataset[
+                               "minValue"]) * float(arrayVDataset["scaleFactor"]) + float(arrayVDataset["offset"])
+        lngMaxNewValue = float(arrayVDataset[
+                               "maxValue"]) * float(arrayVDataset["scaleFactor"]) + float(arrayVDataset["offset"])
     else:
         # INTERCEPT
-        if (strType=='INTERCEPT'):
-            lngMinNewValue=float(arrayVDataset["minValue"])-float(arrayVDataset["offset"])*float(arrayVDataset["scaleFactor"])
-            lngMaxNewValue=float(arrayVDataset["maxValue"])-float(arrayVDataset["offset"])*float(arrayVDataset["scaleFactor"])
+        if (strType == 'INTERCEPT'):
+            lngMinNewValue = float(arrayVDataset[
+                                   "minValue"]) - float(arrayVDataset["offset"]) * float(arrayVDataset["scaleFactor"])
+            lngMaxNewValue = float(arrayVDataset[
+                                   "maxValue"]) - float(arrayVDataset["offset"]) * float(arrayVDataset["scaleFactor"])
         else:
             # NO FORMULA
-            lngMinNewValue=float(arrayVDataset["minValue"])
-            lngMaxNewValue=float(arrayVDataset["maxValue"])
+            lngMinNewValue = float(arrayVDataset["minValue"])
+            lngMaxNewValue = float(arrayVDataset["maxValue"])
 
-    return str(lngMinNewValue)+'<%%>'+str(lngMaxNewValue);
+    return str(lngMinNewValue) + '<%%>' + str(lngMaxNewValue)
 
 
-def _returnTransformMean(meanValue,arrayFName,arrayVDataset, blnDeviation):
+def _returnTransformMean(meanValue, arrayFName, arrayVDataset, blnDeviation):
     """
     Translate the meaning with a formula.
     """
 
-    strTemp=arrayFName["formula"]
+    strTemp = arrayFName["formula"]
     arrayTemp = strTemp.split('_')
-    strType=arrayTemp[1]
+    strType = arrayTemp[1]
 
-    if (meanValue!=''):
-        if (strType=='SLOPE'):
-            return float(meanValue)*float(arrayVDataset["scaleFactor"])+float(arrayVDataset["offset"])
+    if (meanValue != ''):
+        if (strType == 'SLOPE'):
+            return float(meanValue) * float(arrayVDataset["scaleFactor"]) + float(arrayVDataset["offset"])
         else:
-            if (strType=='INTERCEPT'):
-                if (blnDeviation==0):
-                    return ((float(meanValue)-float(arrayVDataset["offset"]))*float(arrayVDataset["scaleFactor"]))
+            if (strType == 'INTERCEPT'):
+                if (blnDeviation == 0):
+                    return ((float(meanValue) - float(arrayVDataset["offset"])) * float(arrayVDataset["scaleFactor"]))
                 else:
                     return float(meanValue)
             else:
-                if (strType=='PERC'):
+                if (strType == 'PERC'):
                     return str(meanValue)
                 else:
-                    if (strType=='LOG'):
-                        if (float(meanValue)!=0.0):
-                            meanValue=float(meanValue)
-                            meanValue=10**meanValue
+                    if (strType == 'LOG'):
+                        if (float(meanValue) != 0.0):
+                            meanValue = float(meanValue)
+                            meanValue = 10 ** meanValue
                             return float(meanValue)
                         else:
                             return ''
@@ -2617,102 +2768,107 @@ def _returnTransformMean(meanValue,arrayFName,arrayVDataset, blnDeviation):
     return ''
 
 
-def checkDate(fromYear,toYear,lngYearCheck,fromMonth,toMonth,lngMonthCheck):
+def checkDate(fromYear, toYear, lngYearCheck, fromMonth, toMonth, lngMonthCheck):
     """
     Verify if a date is including in min and max values
     """
-    blnContinue=False;
+    blnContinue = False
 
-    if (fromYear==lngYearCheck and toYear==lngYearCheck):
-        if (int (lngMonthCheck) >= int (fromMonth)) and (int (lngMonthCheck) <= int (toMonth)):
-            blnContinue=True
+    if (fromYear == lngYearCheck and toYear == lngYearCheck):
+        if (int(lngMonthCheck) >= int(fromMonth)) and (int(lngMonthCheck) <= int(toMonth)):
+            blnContinue = True
     else:
-        if (fromYear==lngYearCheck):
-            if (int (lngMonthCheck) >= int (fromMonth)):
-                blnContinue=True
+        if (fromYear == lngYearCheck):
+            if (int(lngMonthCheck) >= int(fromMonth)):
+                blnContinue = True
         else:
-            if (toYear==lngYearCheck):
-                if (int (lngMonthCheck) <= int (toMonth)):
-                    blnContinue=True
+            if (toYear == lngYearCheck):
+                if (int(lngMonthCheck) <= int(toMonth)):
+                    blnContinue = True
             else:
-                blnContinue=True
+                blnContinue = True
     return blnContinue
 
 
-def _returnNationalLinks(lat,lon):
+def _returnNationalLinks(lat, lon):
     """
     Function that returns meteo and national link.
     """
 
-    global strGIniNationalLinks;
-    global strGIniNLink_layer;
-    global strGIniNLink_cahttp;
-    global strGIniNLink_natField;
-    global strGIniNLink_meteoField;
+    global strGIniNationalLinks
+    global strGIniNLink_layer
+    global strGIniNLink_cahttp
+    global strGIniNLink_natField
+    global strGIniNLink_meteoField
     # read input parameters from ini file
 
-    strLayerName=_returnIniValue(strGIniNationalLinks,strGIniNLink_layer)
-    strHttp=_returnIniValue(strGIniNationalLinks,strGIniNLink_cahttp)
-    strNationalLinkField=_returnIniValue(strGIniNationalLinks,strGIniNLink_natField)
-    strMeteoLinkField=_returnIniValue(strGIniNationalLinks,strGIniNLink_meteoField)
+    strLayerName = _returnIniValue(strGIniNationalLinks, strGIniNLink_layer)
+    strHttp = _returnIniValue(strGIniNationalLinks, strGIniNLink_cahttp)
+    strNationalLinkField = _returnIniValue(
+        strGIniNationalLinks, strGIniNLink_natField)
+    strMeteoLinkField = _returnIniValue(
+        strGIniNationalLinks, strGIniNLink_meteoField)
 
+    global strGWFSService
+    global strGWFSVersion
+    global strGWFSRequest
+    global strGEPSGF4326Proj
 
-    global strGWFSService;
-    global strGWFSVersion;
-    global strGWFSRequest;
-    global strGEPSGF4326Proj;
+    request = {'service': strGWFSService, 'version': strGWFSVersion,
+               'request': strGWFSRequest, 'srsname': str(strGEPSGF4326Proj)}
 
-    request = {'service': strGWFSService, 'version': strGWFSVersion, 'request': strGWFSRequest,'srsname':str(strGEPSGF4326Proj)}
+    request['BBox'] = str(
+        lon) + ',' + str(lat) + ',' + str(lon) + ',' + str(lat)
+    request['layer'] = strLayerName
+    request['typeName'] = request['layer']
 
-    request['BBox']=str(lon)+','+str(lat)+','+str(lon)+','+str(lat);
-    request['layer']=strLayerName
-    request['typeName']=request['layer']
-
-    strOWSWFS=_returnVariableDef("WFS");
-    output=_executeURL(strOWSWFS, request, 'Post');
+    strOWSWFS = _returnVariableDef("WFS")
+    output = _executeURL(strOWSWFS, request, 'Post')
     # read the output
-    a=output.read()
-    #print a
-    strNational='';
-    strMeteo='';
+    a = output.read()
+    # print a
+    strNational = ''
+    strMeteo = ''
     try:
         # parse the xml string
         xmldoc = parseString(a)
         # retrieve the national link
         slides1 = xmldoc.getElementsByTagName(strNationalLinkField)
-        strMeteo=slides1[0].childNodes[0].nodeValue
+        strMeteo = slides1[0].childNodes[0].nodeValue
         # retrieve the nation id
         slides2 = xmldoc.getElementsByTagName(strMeteoLinkField)
-        strNational=strHttp+slides2[0].childNodes[0].nodeValue
+        strNational = strHttp + slides2[0].childNodes[0].nodeValue
     except:
         pass
-    response={}
-    response["meteo"]=strMeteo
-    response["national"]=strNational
-    return response;
+    response = {}
+    response["meteo"] = strMeteo
+    response["national"] = strNational
+    return response
 
 
-def _returnIfLeapYear(lngDay,lngYear):
+def _returnIfLeapYear(lngDay, lngYear):
     """
     Function used to analyze if a year is leap or not.
     """
 
-    lngDay=int(lngDay);
+    lngDay = int(lngDay)
 
-    lngYear=int(lngYear);
-    strTempDate=date.fromordinal(date(lngYear, 1, 1).toordinal() + lngDay - 1)
-    strTempDate = datetime.strptime(str(strTempDate),"%Y-%m-%d")
-    lngMonth=int(strTempDate.month)
-    blnLeap=is_leap_year(lngYear)
+    lngYear = int(lngYear)
+    strTempDate = date.fromordinal(
+        date(lngYear, 1, 1).toordinal() + lngDay - 1)
+    strTempDate = datetime.strptime(str(strTempDate), "%Y-%m-%d")
+    lngMonth = int(strTempDate.month)
+    blnLeap = is_leap_year(lngYear)
 
-    if (blnLeap==1):
-        if (lngMonth>=2):
-            if (lngDay>52):
-                lngDay=int(lngDay)+1;
-                strTempDate=date.fromordinal(date(lngYear, 1, 1).toordinal() + lngDay - 1)
-                strTempDate = datetime.strptime(str(strTempDate),"%Y-%m-%d")
+    if (blnLeap == 1):
+        if (lngMonth >= 2):
+            if (lngDay > 52):
+                lngDay = int(lngDay) + 1
+                strTempDate = date.fromordinal(
+                    date(lngYear, 1, 1).toordinal() + lngDay - 1)
+                strTempDate = datetime.strptime(str(strTempDate), "%Y-%m-%d")
     # verify date
-    return strTempDate;
+    return strTempDate
 
 
 def _returnHttpAddress():
@@ -2720,26 +2876,27 @@ def _returnHttpAddress():
     Return http address.
     """
 
-    strHttp="http://"+os.environ["HTTP_HOST"]+'/';
+    strHttp = "http://" + os.environ["HTTP_HOST"] + '/'
 
-    return strHttp;
+    return strHttp
 
 
 def _returnTempDirectory(blnHttp):
     """
     Return the temporary directory.
     """
-    global strGIniSystem;
-    global strGIniSystem_pathTempDir;
-    global strGIniSystem_httpTempDir;
+    global strGIniSystem
+    global strGIniSystem_pathTempDir
+    global strGIniSystem_httpTempDir
     # ini file
-    if (blnHttp==0):
+    if (blnHttp == 0):
         # FS
-        strPath=_returnIniValue(strGIniSystem, strGIniSystem_pathTempDir)
+        strPath = _returnIniValue(strGIniSystem, strGIniSystem_pathTempDir)
     else:
         # HTTP
 
-        strPath =_returnHttpAddress()+_returnIniValue(strGIniSystem, strGIniSystem_httpTempDir)
+        strPath = _returnHttpAddress() + \
+            _returnIniValue(strGIniSystem, strGIniSystem_httpTempDir)
 
     return strPath
 
@@ -2748,22 +2905,23 @@ def _returnHTMLDir():
     """
     Return the HTML directory path.
     """
-    global strGIniSystem;
-    global strGIniSystem_pathHtmlDir;
+    global strGIniSystem
+    global strGIniSystem_pathHtmlDir
     # ini file
-    strPath=_returnIniValue(strGIniSystem, strGIniSystem_pathHtmlDir)
+    strPath = _returnIniValue(strGIniSystem, strGIniSystem_pathHtmlDir)
 
     return strPath
+
 
 def get_image_info(data):
     """
     Function used the retrieve info from an image.
     """
-    #if is_png(data):
+    # if is_png(data):
     w, h = struct.unpack('>LL', data[16:24])
     width = int(w)
     height = int(h)
-    #else:
+    # else:
     #    raise Exception('not a png image')
     return width, height
 
@@ -2775,45 +2933,45 @@ def is_png(data):
     return (data[:8] == '\211PNG\r\n\032\n'and (data[12:16] == 'IHDR'))
 
 
-def _returnIniValue(strSection,strKey):
+def _returnIniValue(strSection, strKey):
     """
     Retrieve the ini value reading the result from section and value.
     """
 
-    strValue='';
+    strValue = ''
     # ini file
     config = ConfigParser.ConfigParser()
-    global strGIniFile;
+    global strGIniFile
 
-    if (strGIniFile==""):
-        strIniFile=_returnIniFile();
-        strGIniFile=strIniFile;
+    if (strGIniFile == ""):
+        strIniFile = _returnIniFile()
+        strGIniFile = strIniFile
 
     config.read(strGIniFile)
     strValue = config.get(strSection, strKey)
 
-    return strValue;
+    return strValue
 
 
-def _returnColorsScale_SC(strKey,strReturn):
+def _returnColorsScale_SC(strKey, strReturn):
     """
     Read the colors scale STEPCHART from ini file.
     """
-    global strGIniSectionGraph;
-    if (strReturn=="LABEL"):
-        strKey=strKey.replace("_COLORS", "_LABELS");
-        arrayValues=_returnColorsScale(strKey)
+    global strGIniSectionGraph
+    if (strReturn == "LABEL"):
+        strKey = strKey.replace("_COLORS", "_LABELS")
+        arrayValues = _returnColorsScale(strKey)
     else:
-        if (strReturn=="COLOR"):
-            arrayValues=_returnColorsScale(strKey)
+        if (strReturn == "COLOR"):
+            arrayValues = _returnColorsScale(strKey)
         else:
-            if (strReturn=="NUMFIELDS"):
-                #print strKey
-                arrayValues=_returnColorsScale(strKey)
+            if (strReturn == "NUMFIELDS"):
+                # print strKey
+                arrayValues = _returnColorsScale(strKey)
                 return int(len(arrayValues))
                 #strKey=strKey.replace("_COLORS", "_NUMFIELDS");
-                #strTemp=_returnIniValue(strGIniSectionGraph,strKey)
-                #return strTemp
+                # strTemp=_returnIniValue(strGIniSectionGraph,strKey)
+                # return strTemp
     return arrayValues
 
 
@@ -2821,22 +2979,22 @@ def _returnColorsScale(strKey):
     """
     Read the colors scale from ini file.
     """
-    global strGIniSectionGraph;
-    arrayColors=[]
+    global strGIniSectionGraph
+    arrayColors = []
 
-    strTemp=_returnIniValue(strGIniSectionGraph,strKey)
+    strTemp = _returnIniValue(strGIniSectionGraph, strKey)
     arrayColors = strTemp.split(',')
-    return arrayColors;
+    return arrayColors
 
 
 def _returnTraceFile():
     """
     Read the trace filename from ini file.
     """
-    strSection='TRACE'
-    strKey='TRACE_FILE'
-    strTemp=_returnIniValue(strSection,strKey)
-    return strTemp;
+    strSection = 'TRACE'
+    strKey = 'TRACE_FILE'
+    strTemp = _returnIniValue(strSection, strKey)
+    return strTemp
 
 
 def _writeTrace(strError):
@@ -2844,113 +3002,112 @@ def _writeTrace(strError):
     Write an error into the trace file.
     """
 
-    strFile=_returnTraceFile();
-    f = open(strFile,'a')
-    f.write("\n"+strError)
+    strFile = _returnTraceFile()
+    f = open(strFile, 'a')
+    f.write("\n" + strError)
     f.close()
 
-    return "";
+    return ""
 
 
 def _savePid(strFilename):
     """
     Function used to save a file used to delete the PID from the processes list.
     """
-    strText="kill "+str(os.getpid())
-    f = open(strFilename,'wb')
+    strText = "kill " + str(os.getpid())
+    f = open(strFilename, 'wb')
     f.write(strText)
     f.close()
 
-    return "";
+    return ""
 
 
 def _killPid(strFilename):
     """
     Function used to execute the previous delete file.
     """
-    os.system('bash '+strFilename);
+    os.system('bash ' + strFilename)
 
-    return "";
+    return ""
 
 
 def _returnHttpFilename(strFilename):
     """
     Return the translate http address.
     """
-    global strGIniSystem;
-    global strGIniSystem_pathHtmlDir;
+    global strGIniSystem
+    global strGIniSystem_pathHtmlDir
 
-    strFrom = _returnIniValue(strGIniSystem,strGIniSystem_pathHtmlDir)
-    strTo = _returnHttpAddress();
-    strHttp=strFilename.replace(strFrom, strTo);
+    strFrom = _returnIniValue(strGIniSystem, strGIniSystem_pathHtmlDir)
+    strTo = _returnHttpAddress()
+    strHttp = strFilename.replace(strFrom, strTo)
 
-    return strHttp;
+    return strHttp
 
 
 def _returnFilename_csv():
     """
     Return the csv filename.
     """
-    global strGIniSystem;
-    global strGIniSystem_pathTempDir;
+    global strGIniSystem
+    global strGIniSystem_pathTempDir
 
-    strPath=_returnIniValue(strGIniSystem,strGIniSystem_pathTempDir)
+    strPath = _returnIniValue(strGIniSystem, strGIniSystem_pathTempDir)
 
-    strName=_returnUniqueFilename()+'.csv'
-    return os.path.join(strPath,strName)
+    strName = _returnUniqueFilename() + '.csv'
+    return os.path.join(strPath, strName)
 
 
-def _formatCsvFile(strText,strFilename):
+def _formatCsvFile(strText, strFilename):
     """
     Init the CSV file.
     """
 
-    if (strText==""):
-        f = open(strFilename,'wb')
+    if (strText == ""):
+        f = open(strFilename, 'wb')
     else:
-        f = open(strFilename,'ab')
+        f = open(strFilename, 'ab')
 
     f.write(strText)
     f.close()
-    return "";
+    return ""
 
 
-def _returnCommonYears(arrayFNameS,lngFromYear,lngToYear):
+def _returnCommonYears(arrayFNameS, lngFromYear, lngToYear):
     """
     Function used to retrieve all common years for a group of layers.
     """
-    #arrayDays=[]
-    arrayIncr=[]
-    blnSpecialDates=0
-
+    # arrayDays=[]
+    arrayIncr = []
+    blnSpecialDates = 0
 
     for arrayFName in arrayFNameS:
         # strTempDates=''
         # if (arrayFName["shape_dates"]!=""):
         #     strTempDates=arrayFName["shape_dates"]
 
-        strTemporalType=arrayFName["interval"]
+        strTemporalType = arrayFName["interval"]
 
-        if ((strTemporalType=="10d") or (strTemporalType=="16d") or (strTemporalType=="15d") or (strTemporalType=="1d") or (strTemporalType=="1m") or (strTemporalType=="1y")):
+        if ((strTemporalType == "10d") or (strTemporalType == "16d") or (strTemporalType == "15d") or (strTemporalType == "1d") or (strTemporalType == "1m") or (strTemporalType == "1y")):
             arrayIncr.append(1)
         else:
-            if (strTemporalType=="10y"):
+            if (strTemporalType == "10y"):
                 arrayIncr.append(10)
             else:
-                blnSpecialDates=1
+                blnSpecialDates = 1
                 arrayIncr.append(-1)
 
-    lngStepYear=0
-    arrayReturn=[]
+    lngStepYear = 0
+    arrayReturn = []
     if ((blnSpecialDates == 1) and (len(arrayIncr) == 1)):
 
         arrayYears = arrayFName["fixed"].split('_')
-        arrayReturn=[]
+        arrayReturn = []
         for strTemp in arrayYears:
             arrayReturn.append(int(strTemp[:4]))
     else:
-        lngStepYear=1
-        arrayReturn = range(int(lngFromYear),int(lngToYear)+1,lngStepYear)
+        lngStepYear = 1
+        arrayReturn = range(int(lngFromYear), int(lngToYear) + 1, lngStepYear)
 
     return arrayReturn
 
@@ -2959,7 +3116,7 @@ def escape(s, quote=None):
     """
     Escape funcionality.
     """
-    s = s.replace("&", "&") # Must be done first!
+    s = s.replace("&", "&")  # Must be done first!
     s = s.replace("<", "<")
     s = s.replace(">", ">")
 
@@ -2972,15 +3129,16 @@ def _verifyXss_array(arrayParams):
 
     for strTemp in arrayParams:
 
-        blnArray=isinstance(arrayParams[strTemp], list)
-        if (blnArray==False):
-            arrayParams[strTemp]=escape(str(arrayParams[strTemp]));
+        blnArray = isinstance(arrayParams[strTemp], list)
+        if (blnArray == False):
+            arrayParams[strTemp] = escape(str(arrayParams[strTemp]))
         else:
             for strVar in arrayParams[strTemp]:
                 for strVar1 in strVar:
-                    blnArray=isinstance(strVar[strVar1], list)
-                    if (blnArray==False):
-                        arrayParams[strTemp][0][strVar1] = escape(str(arrayParams[strTemp][0][strVar1]))
+                    blnArray = isinstance(strVar[strVar1], list)
+                    if (blnArray == False):
+                        arrayParams[strTemp][0][strVar1] = escape(
+                            str(arrayParams[strTemp][0][strVar1]))
 
     return arrayParams
 
@@ -2989,19 +3147,19 @@ def _returnCommonDates(arrayFNameS):
     """
     Function used to retrieve common dates.
     """
-    arrayDays=[]
+    arrayDays = []
     for arrayFName in arrayFNameS:
 
-        strTempDates=''
+        strTempDates = ''
 
-        if (arrayFName["shape_dates"]!=""):
-            strTempDates=arrayFName["shape_dates"]
+        if (arrayFName["shape_dates"] != ""):
+            strTempDates = arrayFName["shape_dates"]
 
-        strTempInterval=arrayFName["interval"]
-        dayconditions= _returnDayConditions(strTempInterval, strTempDates);
-        arrayDays=arrayDays+dayconditions
+        strTempInterval = arrayFName["interval"]
+        dayconditions = _returnDayConditions(strTempInterval, strTempDates)
+        arrayDays = arrayDays + dayconditions
 
-    resultList= list(set(arrayDays))
+    resultList = list(set(arrayDays))
     resultList.sort(reverse=False)
     return resultList
 
@@ -3010,30 +3168,40 @@ def _returnGraphSettings():
     """
     Function used the first time to return graph setting values.
     """
-    global strGIniSectionGraph;
+    global strGIniSectionGraph
 
-    global strGGraph_Title;
-    global strGGraph_xTitle;
-    global strGGraph_width;
-    global strGGraph_height;
-    global strGGraph_numY1Dataset;
-    global strGGraph_numY2Dataset;
-    global strGGraph_numDecPlaces;
-    global strGGraph_refreshMSec;
-    global strGMView_numMaxLayers;
-    global strGMView_latLongNPlaces;
+    global strGGraph_Title
+    global strGGraph_xTitle
+    global strGGraph_width
+    global strGGraph_height
+    global strGGraph_numY1Dataset
+    global strGGraph_numY2Dataset
+    global strGGraph_numDecPlaces
+    global strGGraph_refreshMSec
+    global strGMView_numMaxLayers
+    global strGMView_latLongNPlaces
 
-    arraySettings={}
-    arraySettings["title"]=_returnIniValue(strGIniSectionGraph,strGGraph_Title)
-    arraySettings["xtitle"]=_returnIniValue(strGIniSectionGraph, strGGraph_xTitle)
-    arraySettings["width"]=_returnIniValue(strGIniSectionGraph, strGGraph_width)
-    arraySettings["height"]=_returnIniValue(strGIniSectionGraph, strGGraph_height)
-    arraySettings["numY1Dataset"]=_returnIniValue(strGIniSectionGraph, strGGraph_numY1Dataset)
-    arraySettings["numY2Dataset"]=_returnIniValue(strGIniSectionGraph, strGGraph_numY2Dataset)
-    arraySettings["numDPlaces"]=_returnIniValue(strGIniSectionGraph, strGGraph_numDecPlaces)
-    arraySettings["refreshMs"]=_returnIniValue(strGIniSectionGraph, strGGraph_refreshMSec)
-    arraySettings["mViewerMaxLayers"]=_returnIniValue(strGIniSectionGraph, strGMView_numMaxLayers)
-    arraySettings["mViewernumDPlaces"]=_returnIniValue(strGIniSectionGraph, strGMView_latLongNPlaces)
+    arraySettings = {}
+    arraySettings["title"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_Title)
+    arraySettings["xtitle"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_xTitle)
+    arraySettings["width"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_width)
+    arraySettings["height"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_height)
+    arraySettings["numY1Dataset"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_numY1Dataset)
+    arraySettings["numY2Dataset"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_numY2Dataset)
+    arraySettings["numDPlaces"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_numDecPlaces)
+    arraySettings["refreshMs"] = _returnIniValue(
+        strGIniSectionGraph, strGGraph_refreshMSec)
+    arraySettings["mViewerMaxLayers"] = _returnIniValue(
+        strGIniSectionGraph, strGMView_numMaxLayers)
+    arraySettings["mViewernumDPlaces"] = _returnIniValue(
+        strGIniSectionGraph, strGMView_latLongNPlaces)
 
     return arraySettings
 
@@ -3054,4 +3222,3 @@ def _returnGraphSettings():
 #           text = text[:match.start()] + fixed + text[match.end():]
 #       else:
 #           return text
-

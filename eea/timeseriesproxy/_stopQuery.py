@@ -14,20 +14,29 @@
 #========================================================================
 
 from mdlFunctions import _killPid
-from mdlFunctions import _writeTrace
+from mdlFunctions import logger
 import sys
 import json
 
-print "Content-Type: text/plain;charset=utf-8"
-print
+#from mdlFunctions import _writeTrace
 
-# read input parameters
-try:
+
+def main():
 	arrayParams = json.load(sys.stdin)
 	print arrayParams
 	# kill the pid
 	_killPid(arrayParams["strFile"])
 	# delete the temporary file
 	#_deleteFile(arrayParams["strFile"])
-except:
-	_writeTrace(str(sys.exc_info()))
+
+
+if __name__ == "__main__":
+    print "Content-Type: text/plain;charset=utf-8"
+    print
+
+    # read input parameters
+    try:
+        main()
+    except:
+        logger.exception()
+        #_writeTrace(str(sys.exc_info()))

@@ -17,73 +17,82 @@ from mdlFunctions import _returnGroupFromArrayLayers
 from mdlFunctions import _returnMetadataLink
 from mdlFunctions import _returnOwnerFromArrayLayers
 from mdlFunctions import _returnReplaceDatasetIndicator
-from mdlFunctions import _writeTrace
+from mdlFunctions import logger
 import cgi
 import cgitb
 import json
-import sys
+
+#from mdlFunctions import _writeTrace
+#import sys
 
 
-cgitb.enable()
+def main():
+    # reads input parameters
+    form = cgi.FieldStorage()
+    # specific dataset name
+    strReturn = str(form.getfirst("strReturn"))
+    if (strReturn == "None"):
+        strReturn = ""
+    # blnOnlyValues
+    blnOnlyValues = int(form.getfirst("blnOnlyValues"))
+    #
 
-print "Content-type: application/json"
-print
-response={}
-try:
-	# reads input parameters
-	form   = cgi.FieldStorage()
-	# specific dataset name
-	strReturn=str(form.getfirst("strReturn"))
-	if (strReturn=="None"):
-		strReturn=""
-	# blnOnlyValues
-	blnOnlyValues= int(form.getfirst("blnOnlyValues"))
-	#
+    strType = (form.getfirst("strType"))
+    # return array list from a specific section of ini file
 
-	strType= (form.getfirst("strType"))
-	# return array list from a specific section of ini file
+    arrayLayers = _returnEncodedArrayLayers(strType, strReturn, blnOnlyValues)
 
-	arrayLayers=_returnEncodedArrayLayers(strType,strReturn,blnOnlyValues);
+    # return owner
+    arrayOwner = _returnOwnerFromArrayLayers(arrayLayers, 0)
 
-	# return owner
-	arrayOwner=_returnOwnerFromArrayLayers(arrayLayers,0)
+    if (strReturn == ""):
+        arrayOwnerGraph = _returnOwnerFromArrayLayers(arrayLayers, 1)
 
-	if (strReturn==""):
-		arrayOwnerGraph=_returnOwnerFromArrayLayers(arrayLayers,1)
+    # return group
+    arrayGroups = _returnGroupFromArrayLayers(arrayLayers)
+    arrayDatasetIndicatorGroup = _returnDatasetIndicatorGroup()
+    arrayReplaceDatasetIndicator = _returnReplaceDatasetIndicator()
 
-	# return group
-	arrayGroups=_returnGroupFromArrayLayers(arrayLayers)
-	arrayDatasetIndicatorGroup=_returnDatasetIndicatorGroup()
-	arrayReplaceDatasetIndicator=_returnReplaceDatasetIndicator()
+    # json response
+    response = {'result': 1, 'error': ''}
+    # dataset availables
+    response["data"] = arrayLayers
 
-	# json response
-	response={'result': 1, 'error': ''}
-	# dataset availables
-	response["data"]=arrayLayers
+    # owners list
+    arrayOwner.sort(reverse=False)
+    response["owner"] = arrayOwner
 
-	# owners list
-	arrayOwner.sort(reverse=False)
-	response["owner"]=arrayOwner
+    response["datasetIndicatorGroup"] = arrayDatasetIndicatorGroup
+    response["replaceDatasetIndicator"] = arrayReplaceDatasetIndicator
 
-	response["datasetIndicatorGroup"]=arrayDatasetIndicatorGroup
-	response["replaceDatasetIndicator"]=arrayReplaceDatasetIndicator
+    # groups list
+    arrayGroups.sort(reverse=False)
+    response["groups"] = arrayGroups
+    response["GNpath"] = _returnMetadataLink('')
+    response["ownerGraph"] = ""
+    if (strReturn == ""):
+        arrayOwnerGraph.sort(reverse=False)
+        response["ownerGraph"] = arrayOwnerGraph
 
-	# groups list
-	arrayGroups.sort(reverse=False)
-	response["groups"]=arrayGroups
-	response["GNpath"]=_returnMetadataLink('');
-	response["ownerGraph"]=""
-	if (strReturn==""):
-		arrayOwnerGraph.sort(reverse=False)
-		response["ownerGraph"]=arrayOwnerGraph
+    # the first time returns also graph configurations parameters
+    if (blnOnlyValues == 1):
+        response["graphSettings"] = _returnGraphSettings()
 
-	# the first time returns also graph configurations parameters
-	if (blnOnlyValues==1):
-		response["graphSettings"]=_returnGraphSettings();
+    print(json.JSONEncoder().encode(response))
 
-	print(json.JSONEncoder().encode(response))
-except:
-	_writeTrace(str(sys.exc_info()))
-	strError='There was an error with the request. Pleae, try again.'
-	response={'result': 0, 'error': strError}
-	print(json.JSONEncoder().encode(response))
+
+if __name__ == "__main__":
+
+    cgitb.enable()
+
+    print "Content-type: application/json"
+    print
+    response = {}
+    try:
+        main()
+    except:
+        # _writeTrace(str(sys.exc_info()))
+        strError = 'There was an error with the request. Please, try again.'
+        logger.exception(strError)
+        response = {'result': 0, 'error': strError}
+        print(json.JSONEncoder().encode(response))
